@@ -108,6 +108,7 @@ function PlayingView({ socket, state, me, sound }) {
   const otherPlayers = state.players.filter(p => p.id !== me.id);
   const [showSend, setShowSend] = useState(false);
   const [showBank, setShowBank] = useState(false);
+  const receivedTx = useReceivedNotification(state, me);
 
   useReceiveSound(me.balance, sound.enabled);
 
@@ -160,7 +161,86 @@ function PlayingView({ socket, state, me, sound }) {
         me={me}
         onClose={() => setShowBank(false)}
       />
+      {receivedTx.tx && (
+        <ReceiveNotification
+          tx={receivedTx.tx}
+          state={state}
+          onClose={receivedTx.dismiss}
+        />
+      )}
     </>
+  );
+}
+
+function useReceivedNotification(state, me) {
+  const [tx, setTx] = useState(null);
+  const seenRef = useRef(null);
+
+  useEffect(() => {
+    if (!state || !me) return;
+    const txs = state.transactions;
+
+    // İlk yüklemede mevcut son işlemi "görüldü" say, modal açma
+    if (seenRef.current === null) {
+      seenRef.current = txs.length > 0 ? txs[txs.length - 1].id : '__none__';
+      return;
+    }
+
+    const idx = seenRef.current === '__none__'
+      ? -1
+      : txs.findIndex(t => t.id === seenRef.current);
+    const fresh = idx >= 0 ? txs.slice(idx + 1) : txs;
+
+    const incoming = fresh.filter(t =>
+      t.to === me.id &&
+      !t.undone &&
+      (t.type === 'transfer' || t.type === 'banker-credit' || t.type === 'pass-go')
+    );
+
+    if (incoming.length > 0) {
+      setTx(incoming[incoming.length - 1]);
+    }
+    if (txs.length > 0) seenRef.current = txs[txs.length - 1].id;
+  }, [state, me]);
+
+  useEffect(() => {
+    if (!tx) return;
+    const id = setTimeout(() => setTx(null), 5000);
+    return () => clearTimeout(id);
+  }, [tx]);
+
+  return { tx, dismiss: () => setTx(null) };
+}
+
+function ReceiveNotification({ tx, state, onClose }) {
+  const cur = state.config.currency;
+  const sender = state.players.find(p => p.id === tx.from);
+  const senderName = sender?.name ?? 'Banka';
+  const color = sender?.color ?? '#475569'; // bank gray
+
+  const label = tx.type === 'pass-go'
+    ? '🎲 GO Bonusu'
+    : tx.type === 'banker-credit'
+      ? '🏦 Bankadan Para'
+      : '💸 Para Geldi';
+
+  return (
+    <div
+      className="fixed inset-0 z-[100] flex flex-col items-center justify-center p-6 cursor-pointer"
+      style={{ backgroundColor: color }}
+      onClick={onClose}
+    >
+      <div className="receive-notification text-center text-white">
+        <div className="text-2xl opacity-90 font-semibold mb-3 drop-shadow">{label}</div>
+        <div className="text-5xl font-black mb-6 drop-shadow tracking-tight">{senderName}</div>
+        <div className="text-7xl font-black drop-shadow balance-display">
+          +{tx.amount.toLocaleString('tr-TR')}{cur}
+        </div>
+        <div className="mt-10 text-sm opacity-70">kapatmak için dokun</div>
+      </div>
+      {/* progress bar */}
+      <div className="absolute bottom-0 left-0 h-1 bg-white/40 receive-progress" />
+    </div>
   );
 }
 
