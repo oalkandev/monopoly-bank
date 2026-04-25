@@ -8,7 +8,16 @@ import { ThemeToggle } from './ThemeToggle.jsx';
 import { useTheme } from './useTheme.js';
 import '../index.css';
 
-const PLAYER_COLORS = ['#3b82f6', '#ef4444', '#22c55e', '#f59e0b', '#a855f7', '#06b6d4', '#ec4899', '#84cc16'];
+const PLAYER_COLORS = [
+  '#3b82f6', // mavi
+  '#ef4444', // kırmızı
+  '#eab308', // sarı
+  '#22c55e', // yeşil
+  '#a855f7', // mor
+  '#06b6d4', // turkuaz
+  '#ec4899', // pembe
+  '#f97316', // turuncu
+];
 
 function fmt(n, currency) {
   return `${n.toLocaleString('tr-TR')}${currency}`;
