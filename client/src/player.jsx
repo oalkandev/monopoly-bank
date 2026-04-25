@@ -267,12 +267,35 @@ function SendModal({ open, socket, state, me, others, onClose }) {
 
   return (
     <Modal open={open} onClose={onClose} title="💸 Para Gönder">
-      <label className="form-control w-full">
+      <div className="form-control w-full">
         <div className="label py-1"><span className="label-text">Alıcı</span></div>
-        <select className="select select-bordered w-full" value={toId} onChange={(e) => setToId(e.target.value)}>
-          {others.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-        </select>
-      </label>
+        <div className="grid grid-cols-2 gap-2">
+          {others.map(p => {
+            const selected = toId === p.id;
+            return (
+              <label
+                key={p.id}
+                className={`cursor-pointer rounded-lg border-2 px-3 py-2 flex items-center gap-2 transition-all ${selected ? 'shadow-md scale-[1.02]' : 'opacity-70 hover:opacity-100'}`}
+                style={{
+                  borderColor: p.color,
+                  backgroundColor: selected ? p.color : 'transparent',
+                  color: selected ? 'white' : undefined,
+                }}
+              >
+                <input
+                  type="radio"
+                  name="recipient"
+                  className="radio radio-sm"
+                  style={{ accentColor: p.color }}
+                  checked={selected}
+                  onChange={() => setToId(p.id)}
+                />
+                <span className="font-bold truncate">{p.name}</span>
+              </label>
+            );
+          })}
+        </div>
+      </div>
       <label className="form-control w-full">
         <div className="label py-1"><span className="label-text">Miktar</span></div>
         <input
@@ -290,7 +313,7 @@ function SendModal({ open, socket, state, me, others, onClose }) {
       <QuickAmounts onPick={(v) => setAmount(String(v))} />
       <div className="modal-action mt-3">
         <button className="btn btn-ghost" onClick={onClose} disabled={busy}>İptal</button>
-        <button className="btn btn-primary" onClick={send} disabled={busy}>
+        <button className="btn btn-primary" onClick={send} disabled={busy || !toId}>
           {busy ? <span className="loading loading-spinner loading-sm" /> : 'Gönder'}
         </button>
       </div>
