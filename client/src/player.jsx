@@ -463,11 +463,11 @@ function SendModal({ open, socket, state, me, others, onClose }) {
         </div>
         <label className={`input input-bordered flex items-center gap-2 h-16 ${exceeds ? 'input-error' : ''}`}>
           <input
-            type="number"
-            inputMode="numeric"
+            type="text"
+            inputMode="numeric" pattern="[0-9]*"
             className="grow text-3xl font-black text-right balance-display bg-transparent border-0 focus:outline-none"
             value={amount}
-            onChange={(e) => setAmount(e.target.value)}
+            onChange={(e) => setAmount(e.target.value.replace(/[^0-9]/g, ""))}
             min="1"
             onKeyDown={(e) => e.key === 'Enter' && send()}
             placeholder="0"
@@ -574,11 +574,11 @@ function PayBankModal({ open, socket, state, me, onClose }) {
         </div>
         <label className={`input input-bordered flex items-center gap-2 h-16 ${exceeds ? 'input-error' : ''}`}>
           <input
-            type="number"
-            inputMode="numeric"
+            type="text"
+            inputMode="numeric" pattern="[0-9]*"
             className="grow text-3xl font-black text-right balance-display bg-transparent border-0 focus:outline-none"
             value={amount}
-            onChange={(e) => setAmount(e.target.value)}
+            onChange={(e) => setAmount(e.target.value.replace(/[^0-9]/g, ""))}
             min="1"
             onKeyDown={(e) => e.key === 'Enter' && send()}
             placeholder="0"
