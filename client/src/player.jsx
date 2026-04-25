@@ -329,7 +329,7 @@ function SendModal({ open, socket, state, me, others, onClose }) {
                 key={p.id}
                 type="button"
                 onClick={() => setToId(p.id)}
-                className={`relative rounded-xl border-2 px-3 py-3 flex items-center gap-2 transition-all text-left ${selected ? 'shadow-lg scale-[1.02]' : 'opacity-60 hover:opacity-100 active:scale-95'}`}
+                className={`relative rounded-xl border-2 px-4 py-4 flex items-center gap-3 transition-all text-left ${selected ? 'shadow-lg scale-[1.02]' : 'opacity-60 hover:opacity-100 active:scale-95'}`}
                 style={{
                   borderColor: p.color,
                   backgroundColor: selected ? p.color : 'transparent',
@@ -337,10 +337,14 @@ function SendModal({ open, socket, state, me, others, onClose }) {
                 }}
               >
                 {selected && (
-                  <span className="absolute top-1 right-1 text-xs">✓</span>
+                  <span className="absolute -top-2 -right-2 bg-white text-success rounded-full w-7 h-7 flex items-center justify-center shadow-md">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                  </span>
                 )}
                 <div
-                  className="w-3 h-3 rounded-full flex-none"
+                  className="w-4 h-4 rounded-full flex-none"
                   style={{
                     backgroundColor: selected ? 'white' : p.color,
                     boxShadow: selected ? `0 0 0 2px white` : undefined,
@@ -393,41 +397,41 @@ function SendModal({ open, socket, state, me, others, onClose }) {
       </div>
 
       {/* Quick amounts */}
-      <div className="grid grid-cols-5 gap-1.5">
-        {[50, 100, 200, 500, 1000].map(p => (
-          <button
-            key={p}
-            type="button"
-            className="btn btn-sm btn-outline"
-            onClick={() => setAmount(String(p))}
-            disabled={p > me.balance}
-          >
-            {p}
-          </button>
-        ))}
+      <div className="mt-5">
+        <div className="text-xs opacity-60 uppercase tracking-wide mb-2">Hızlı seç</div>
+        <div className="grid grid-cols-5 gap-1.5">
+          {[50, 100, 200, 500, 1000].map(p => (
+            <button
+              key={p}
+              type="button"
+              className="btn btn-sm btn-outline"
+              onClick={() => setAmount(String(p))}
+              disabled={p > me.balance}
+            >
+              {p}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* Aksiyonlar */}
-      <div className="modal-action mt-4">
-        <button className="btn btn-ghost flex-1" onClick={onClose} disabled={busy}>İptal</button>
-        <button
-          className="btn btn-primary flex-[2] btn-lg"
-          onClick={send}
-          disabled={!canSend}
-        >
-          {busy ? (
-            <span className="loading loading-spinner loading-sm" />
-          ) : !recipient ? (
-            'Alıcı seç'
-          ) : !numAmount ? (
-            'Miktar gir'
-          ) : exceeds ? (
-            'Yetersiz bakiye'
-          ) : (
-            <>💸 {recipient.name}'e {fmt(numAmount, cur)} Gönder</>
-          )}
-        </button>
-      </div>
+      {/* Aksiyon */}
+      <button
+        className="btn btn-primary btn-lg w-full mt-5"
+        onClick={send}
+        disabled={!canSend}
+      >
+        {busy ? (
+          <span className="loading loading-spinner loading-sm" />
+        ) : !recipient ? (
+          'Alıcı seç'
+        ) : !numAmount ? (
+          'Miktar gir'
+        ) : exceeds ? (
+          'Yetersiz bakiye'
+        ) : (
+          <>💸 {recipient.name}'e {fmt(numAmount, cur)} Gönder</>
+        )}
+      </button>
     </Modal>
   );
 }
@@ -497,34 +501,34 @@ function PayBankModal({ open, socket, state, me, onClose }) {
         </div>
       </div>
 
-      <div className="grid grid-cols-5 gap-1.5">
-        {[50, 100, 200, 500, 1000].map(p => (
-          <button
-            key={p}
-            type="button"
-            className="btn btn-sm btn-outline"
-            onClick={() => setAmount(String(p))}
-            disabled={p > me.balance}
-          >
-            {p}
-          </button>
-        ))}
+      <div className="mt-5">
+        <div className="text-xs opacity-60 uppercase tracking-wide mb-2">Hızlı seç</div>
+        <div className="grid grid-cols-5 gap-1.5">
+          {[50, 100, 200, 500, 1000].map(p => (
+            <button
+              key={p}
+              type="button"
+              className="btn btn-sm btn-outline"
+              onClick={() => setAmount(String(p))}
+              disabled={p > me.balance}
+            >
+              {p}
+            </button>
+          ))}
+        </div>
       </div>
 
-      <div className="modal-action mt-4">
-        <button className="btn btn-ghost flex-1" onClick={onClose} disabled={busy}>İptal</button>
-        <button className="btn btn-accent flex-[2] btn-lg" onClick={send} disabled={!canPay}>
-          {busy ? (
-            <span className="loading loading-spinner loading-sm" />
-          ) : !numAmount ? (
-            'Miktar gir'
-          ) : exceeds ? (
-            'Yetersiz bakiye'
-          ) : (
-            <>🏦 Bankaya {fmt(numAmount, cur)} Öde</>
-          )}
-        </button>
-      </div>
+      <button className="btn btn-accent btn-lg w-full mt-5" onClick={send} disabled={!canPay}>
+        {busy ? (
+          <span className="loading loading-spinner loading-sm" />
+        ) : !numAmount ? (
+          'Miktar gir'
+        ) : exceeds ? (
+          'Yetersiz bakiye'
+        ) : (
+          <>🏦 Bankaya {fmt(numAmount, cur)} Öde</>
+        )}
+      </button>
     </Modal>
   );
 }
@@ -540,21 +544,22 @@ function Modal({ open, onClose, title, headerColor, children }) {
   return (
     <dialog className={`modal ${open ? 'modal-open' : ''}`}>
       <div className="modal-box p-0 overflow-hidden border-2" style={headerColor ? { borderColor: headerColor } : undefined}>
-        {headerColor ? (
-          <div
-            className="px-4 py-3 flex items-center justify-between text-white"
-            style={{ backgroundColor: headerColor }}
+        <div
+          className={`px-4 py-3 flex items-center justify-between ${headerColor ? 'text-white' : 'border-b border-base-300'}`}
+          style={headerColor ? { backgroundColor: headerColor } : undefined}
+        >
+          <h3 className="font-bold text-lg">{title}</h3>
+          <button
+            onClick={onClose}
+            className={`btn btn-circle btn-ghost ${headerColor ? 'text-white hover:bg-white/20' : ''}`}
+            aria-label="Kapat"
           >
-            <h3 className="font-bold text-lg">{title}</h3>
-            <button
-              onClick={onClose}
-              className="btn btn-ghost btn-sm btn-circle text-white hover:bg-white/20"
-              aria-label="Kapat"
-            >✕</button>
-          </div>
-        ) : (
-          <h3 className="font-bold text-lg p-4">{title}</h3>
-        )}
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
         <div className="p-4">{children}</div>
       </div>
       <form method="dialog" className="modal-backdrop">
