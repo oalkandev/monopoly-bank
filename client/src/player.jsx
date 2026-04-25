@@ -465,7 +465,7 @@ function SendModal({ open, socket, state, me, others, onClose }) {
           <input
             type="number"
             inputMode="numeric"
-            className="grow text-3xl font-black text-center balance-display bg-transparent border-0 focus:outline-none"
+            className="grow text-3xl font-black text-right balance-display bg-transparent border-0 focus:outline-none"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
             min="1"
@@ -576,7 +576,7 @@ function PayBankModal({ open, socket, state, me, onClose }) {
           <input
             type="number"
             inputMode="numeric"
-            className="grow text-3xl font-black text-center balance-display bg-transparent border-0 focus:outline-none"
+            className="grow text-3xl font-black text-right balance-display bg-transparent border-0 focus:outline-none"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
             min="1"
