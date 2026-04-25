@@ -396,19 +396,26 @@ function SendModal({ open, socket, state, me, others, onClose }) {
         </div>
       </div>
 
-      {/* Quick amounts */}
+      {/* Quick amounts (additive) */}
       <div className="mt-5">
-        <div className="text-xs opacity-60 uppercase tracking-wide mb-2">Hızlı seç</div>
+        <div className="flex items-center justify-between mb-2">
+          <div className="text-xs opacity-60 uppercase tracking-wide">Hızlı ekle</div>
+          {numAmount > 0 && (
+            <button type="button" className="text-xs link link-error" onClick={() => setAmount('')}>
+              Sıfırla
+            </button>
+          )}
+        </div>
         <div className="grid grid-cols-5 gap-1.5">
           {[50, 100, 200, 500, 1000].map(p => (
             <button
               key={p}
               type="button"
               className="btn btn-sm btn-outline"
-              onClick={() => setAmount(String(p))}
-              disabled={p > me.balance}
+              onClick={() => setAmount(String(numAmount + p))}
+              disabled={numAmount + p > me.balance}
             >
-              {p}
+              +{p}
             </button>
           ))}
         </div>
@@ -502,17 +509,24 @@ function PayBankModal({ open, socket, state, me, onClose }) {
       </div>
 
       <div className="mt-5">
-        <div className="text-xs opacity-60 uppercase tracking-wide mb-2">Hızlı seç</div>
+        <div className="flex items-center justify-between mb-2">
+          <div className="text-xs opacity-60 uppercase tracking-wide">Hızlı ekle</div>
+          {numAmount > 0 && (
+            <button type="button" className="text-xs link link-error" onClick={() => setAmount('')}>
+              Sıfırla
+            </button>
+          )}
+        </div>
         <div className="grid grid-cols-5 gap-1.5">
           {[50, 100, 200, 500, 1000].map(p => (
             <button
               key={p}
               type="button"
               className="btn btn-sm btn-outline"
-              onClick={() => setAmount(String(p))}
-              disabled={p > me.balance}
+              onClick={() => setAmount(String(numAmount + p))}
+              disabled={numAmount + p > me.balance}
             >
-              {p}
+              +{p}
             </button>
           ))}
         </div>

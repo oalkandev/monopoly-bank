@@ -382,16 +382,18 @@ function Stat({ label, value, icon }) {
 function BankerPlayerCard({ socket, player, state, onShowQr }) {
   const [amount, setAmount] = useState('');
   const cur = state.config.currency;
+  const numAmount = Number(amount) || 0;
 
   const adjust = async (sign) => {
-    const v = Number(amount);
-    if (!Number.isFinite(v) || v <= 0) return toast.error('Pozitif miktar girin');
+    if (!Number.isFinite(numAmount) || numAmount <= 0) return toast.error('Pozitif miktar girin');
     try {
-      await emit(socket, 'banker-adjust', { playerId: player.id, amount: sign * v });
+      await emit(socket, 'banker-adjust', { playerId: player.id, amount: sign * numAmount });
       setAmount('');
-      toast.success(sign > 0 ? `+${fmt(v, cur)} verildi` : `−${fmt(v, cur)} alındı`);
+      toast.success(sign > 0 ? `+${fmt(numAmount, cur)} verildi` : `−${fmt(numAmount, cur)} alındı`);
     } catch (e) { toast.error(e.message); }
   };
+
+  const addQuick = (n) => setAmount(String(numAmount + n));
 
   const passGo = async () => {
     try {
@@ -441,6 +443,18 @@ function BankerPlayerCard({ socket, player, state, onShowQr }) {
           />
           <button className="btn btn-success btn-sm join-item" onClick={() => adjust(1)} title="Para ver">+</button>
           <button className="btn btn-error btn-sm join-item" onClick={() => adjust(-1)} title="Para al">−</button>
+        </div>
+        <div className="grid grid-cols-5 gap-1 mt-1">
+          {[50, 100, 200, 500, 1000].map(n => (
+            <button
+              key={n}
+              type="button"
+              className="btn btn-xs btn-outline"
+              onClick={() => addQuick(n)}
+            >
+              +{n}
+            </button>
+          ))}
         </div>
         <button className="btn btn-outline btn-warning btn-block mt-2" onClick={passGo}>
           🎲 GO Bonusu Ver (+{fmt(state.config.passGoBonus, cur)})
