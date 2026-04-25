@@ -469,7 +469,6 @@ function SendModal({ open, socket, state, me, others, onClose }) {
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
             min="1"
-            autoFocus
             onKeyDown={(e) => e.key === 'Enter' && send()}
             placeholder="0"
           />
@@ -581,7 +580,6 @@ function PayBankModal({ open, socket, state, me, onClose }) {
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
             min="1"
-            autoFocus
             onKeyDown={(e) => e.key === 'Enter' && send()}
             placeholder="0"
           />
@@ -644,14 +642,27 @@ function Modal({ open, onClose, title, headerColor, children }) {
     if (!open) return;
     const onKey = (e) => e.key === 'Escape' && onClose();
     document.addEventListener('keydown', onKey);
-    return () => document.removeEventListener('keydown', onKey);
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.body.style.overflow = '';
+    };
   }, [open, onClose]);
 
+  if (!open) return null;
+
   return (
-    <dialog className={`modal modal-bottom sm:modal-middle ${open ? 'modal-open' : ''}`}>
-      <div className="modal-box w-full max-w-md p-0 overflow-hidden border-2" style={headerColor ? { borderColor: headerColor } : undefined}>
+    <div
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 modal-fade-in"
+      onClick={onClose}
+    >
+      <div
+        className="relative w-full sm:max-w-md bg-base-100 rounded-t-2xl sm:rounded-2xl border-2 overflow-hidden max-h-[90vh] overflow-y-auto modal-slide-in"
+        style={headerColor ? { borderColor: headerColor } : undefined}
+        onClick={(e) => e.stopPropagation()}
+      >
         <div
-          className={`px-4 py-3 flex items-center justify-between ${headerColor ? 'text-white' : 'border-b border-base-300'}`}
+          className={`px-4 py-3 flex items-center justify-between sticky top-0 z-10 ${headerColor ? 'text-white' : 'bg-base-100 border-b border-base-300'}`}
           style={headerColor ? { backgroundColor: headerColor } : undefined}
         >
           <h3 className="font-bold text-lg">{title}</h3>
@@ -668,10 +679,7 @@ function Modal({ open, onClose, title, headerColor, children }) {
         </div>
         <div className="p-4">{children}</div>
       </div>
-      <form method="dialog" className="modal-backdrop">
-        <button onClick={onClose}>kapat</button>
-      </form>
-    </dialog>
+    </div>
   );
 }
 

@@ -44,3 +44,22 @@ body {
   to   { width: 0%; }
 }
 .receive-progress { animation: receiveProgress 5s linear forwards; }
+
+/* Modal entrance — works reliably across iOS/Android */
+@keyframes modalFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes modalSlideUp {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+@keyframes modalScaleIn {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1); }
+}
+.modal-fade-in { animation: modalFadeIn 180ms ease-out both; }
+.modal-slide-in { animation: modalSlideUp 240ms cubic-bezier(0.32, 0.72, 0, 1) both; }
+@media (min-width: 640px) {
+  .modal-slide-in { animation: modalScaleIn 180ms ease-out both; }
+}
