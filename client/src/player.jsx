@@ -242,79 +242,156 @@ function TransactionFeed({ state, me }) {
 
 function SendModal({ open, socket, state, me, others, onClose }) {
   const cur = state.config.currency;
-  const [toId, setToId] = useState(others[0]?.id ?? '');
+  const [toId, setToId] = useState('');
   const [amount, setAmount] = useState('');
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     if (open) {
-      setToId(others[0]?.id ?? '');
+      setToId('');
       setAmount('');
     }
-  }, [open, others]);
+  }, [open]);
+
+  const recipient = others.find(p => p.id === toId);
+  const numAmount = Number(amount) || 0;
+  const exceeds = numAmount > me.balance;
+  const remaining = me.balance - numAmount;
+  const canSend = recipient && numAmount > 0 && !exceeds && !busy;
 
   const send = async () => {
-    const v = Number(amount);
-    if (!v || v <= 0) return toast.error('Geçersiz miktar');
-    if (v > me.balance) return toast.error('Yetersiz bakiye');
+    if (!canSend) return;
     setBusy(true);
     try {
-      await emit(socket, 'transfer', { toId, amount: v });
-      toast.success(`${fmt(v, cur)} gönderildi`);
+      await emit(socket, 'transfer', { toId, amount: numAmount });
+      toast.success(`${recipient.name}'e ${fmt(numAmount, cur)} gönderildi`);
       onClose();
     } catch (e) { toast.error(e.message); } finally { setBusy(false); }
   };
 
   return (
-    <Modal open={open} onClose={onClose} title="💸 Para Gönder">
+    <Modal open={open} onClose={onClose} title="💸 Para Gönder" headerColor={me.color}>
+      {/* Bakiye chip */}
+      <div className="flex items-center justify-between bg-base-300 rounded-lg px-3 py-2 mb-3">
+        <span className="text-xs opacity-70 uppercase tracking-wide">Bakiye</span>
+        <span className="font-bold balance-display text-lg">{fmt(me.balance, cur)}</span>
+      </div>
+
+      {/* Alıcı */}
       <div className="form-control w-full">
-        <div className="label py-1"><span className="label-text">Alıcı</span></div>
+        <div className="label py-1">
+          <span className="label-text font-semibold">Alıcı</span>
+          {recipient && (
+            <span className="label-text-alt text-xs" style={{ color: recipient.color }}>
+              ✓ {recipient.name} seçildi
+            </span>
+          )}
+        </div>
         <div className="grid grid-cols-2 gap-2">
           {others.map(p => {
             const selected = toId === p.id;
             return (
-              <label
+              <button
                 key={p.id}
-                className={`cursor-pointer rounded-lg border-2 px-3 py-2 flex items-center gap-2 transition-all ${selected ? 'shadow-md scale-[1.02]' : 'opacity-70 hover:opacity-100'}`}
+                type="button"
+                onClick={() => setToId(p.id)}
+                className={`relative rounded-xl border-2 px-3 py-3 flex items-center gap-2 transition-all text-left ${selected ? 'shadow-lg scale-[1.02]' : 'opacity-60 hover:opacity-100 active:scale-95'}`}
                 style={{
                   borderColor: p.color,
                   backgroundColor: selected ? p.color : 'transparent',
                   color: selected ? 'white' : undefined,
                 }}
               >
-                <input
-                  type="radio"
-                  name="recipient"
-                  className="radio radio-sm"
-                  style={{ accentColor: p.color }}
-                  checked={selected}
-                  onChange={() => setToId(p.id)}
+                {selected && (
+                  <span className="absolute top-1 right-1 text-xs">✓</span>
+                )}
+                <div
+                  className="w-3 h-3 rounded-full flex-none"
+                  style={{
+                    backgroundColor: selected ? 'white' : p.color,
+                    boxShadow: selected ? `0 0 0 2px white` : undefined,
+                  }}
                 />
                 <span className="font-bold truncate">{p.name}</span>
-              </label>
+              </button>
             );
           })}
         </div>
       </div>
-      <label className="form-control w-full">
-        <div className="label py-1"><span className="label-text">Miktar</span></div>
-        <input
-          type="number"
-          inputMode="numeric"
-          className="input input-bordered text-2xl text-center balance-display"
-          value={amount}
-          onChange={(e) => setAmount(e.target.value)}
-          min="1"
-          autoFocus
-          onKeyDown={(e) => e.key === 'Enter' && send()}
-          placeholder="0"
-        />
-      </label>
-      <QuickAmounts onPick={(v) => setAmount(String(v))} />
-      <div className="modal-action mt-3">
-        <button className="btn btn-ghost" onClick={onClose} disabled={busy}>İptal</button>
-        <button className="btn btn-primary" onClick={send} disabled={busy || !toId}>
-          {busy ? <span className="loading loading-spinner loading-sm" /> : 'Gönder'}
+
+      {/* Miktar */}
+      <div className="form-control w-full mt-3">
+        <div className="label py-1">
+          <span className="label-text font-semibold">Miktar</span>
+          <button
+            type="button"
+            className="label-text-alt link link-primary"
+            onClick={() => setAmount(String(me.balance))}
+          >
+            Tümü
+          </button>
+        </div>
+        <label className={`input input-bordered flex items-center gap-2 h-16 ${exceeds ? 'input-error' : ''}`}>
+          <input
+            type="number"
+            inputMode="numeric"
+            className="grow text-3xl font-black text-center balance-display bg-transparent border-0 focus:outline-none"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            min="1"
+            autoFocus
+            onKeyDown={(e) => e.key === 'Enter' && send()}
+            placeholder="0"
+          />
+          <span className="text-2xl font-bold opacity-60">{cur}</span>
+        </label>
+        <div className="label py-1">
+          <span className="label-text-alt">
+            {exceeds ? (
+              <span className="text-error font-semibold">⚠ Yetersiz bakiye</span>
+            ) : numAmount > 0 ? (
+              <span className="opacity-70">Kalan: <span className="font-semibold balance-display">{fmt(remaining, cur)}</span></span>
+            ) : (
+              <span className="opacity-50">Hızlı seç ↓</span>
+            )}
+          </span>
+        </div>
+      </div>
+
+      {/* Quick amounts */}
+      <div className="grid grid-cols-5 gap-1.5">
+        {[50, 100, 200, 500, 1000].map(p => (
+          <button
+            key={p}
+            type="button"
+            className="btn btn-sm btn-outline"
+            onClick={() => setAmount(String(p))}
+            disabled={p > me.balance}
+          >
+            {p}
+          </button>
+        ))}
+      </div>
+
+      {/* Aksiyonlar */}
+      <div className="modal-action mt-4">
+        <button className="btn btn-ghost flex-1" onClick={onClose} disabled={busy}>İptal</button>
+        <button
+          className="btn btn-primary flex-[2] btn-lg"
+          onClick={send}
+          disabled={!canSend}
+        >
+          {busy ? (
+            <span className="loading loading-spinner loading-sm" />
+          ) : !recipient ? (
+            'Alıcı seç'
+          ) : !numAmount ? (
+            'Miktar gir'
+          ) : exceeds ? (
+            'Yetersiz bakiye'
+          ) : (
+            <>💸 {recipient.name}'e {fmt(numAmount, cur)} Gönder</>
+          )}
         </button>
       </div>
     </Modal>
@@ -340,48 +417,85 @@ function PayBankModal({ open, socket, state, me, onClose }) {
     } catch (e) { toast.error(e.message); } finally { setBusy(false); }
   };
 
+  const numAmount = Number(amount) || 0;
+  const exceeds = numAmount > me.balance;
+  const remaining = me.balance - numAmount;
+  const canPay = numAmount > 0 && !exceeds && !busy;
+
   return (
     <Modal open={open} onClose={onClose} title="🏦 Bankaya Öde">
-      <p className="text-sm opacity-70">Vergi, mülk satın alma vb. için kullan.</p>
-      <label className="form-control w-full">
-        <div className="label py-1"><span className="label-text">Miktar</span></div>
-        <input
-          type="number"
-          inputMode="numeric"
-          className="input input-bordered text-2xl text-center balance-display"
-          value={amount}
-          onChange={(e) => setAmount(e.target.value)}
-          min="1"
-          autoFocus
-          onKeyDown={(e) => e.key === 'Enter' && send()}
-          placeholder="0"
-        />
-      </label>
-      <QuickAmounts onPick={(v) => setAmount(String(v))} />
-      <div className="modal-action mt-3">
-        <button className="btn btn-ghost" onClick={onClose} disabled={busy}>İptal</button>
-        <button className="btn btn-accent" onClick={send} disabled={busy}>
-          {busy ? <span className="loading loading-spinner loading-sm" /> : 'Öde'}
+      <p className="text-sm opacity-70 -mt-2 mb-3">Vergi, mülk satın alma vb. için kullan.</p>
+
+      <div className="flex items-center justify-between bg-base-300 rounded-lg px-3 py-2 mb-3">
+        <span className="text-xs opacity-70 uppercase tracking-wide">Bakiye</span>
+        <span className="font-bold balance-display text-lg">{fmt(me.balance, cur)}</span>
+      </div>
+
+      <div className="form-control w-full">
+        <div className="label py-1">
+          <span className="label-text font-semibold">Miktar</span>
+          <button type="button" className="label-text-alt link link-primary" onClick={() => setAmount(String(me.balance))}>Tümü</button>
+        </div>
+        <label className={`input input-bordered flex items-center gap-2 h-16 ${exceeds ? 'input-error' : ''}`}>
+          <input
+            type="number"
+            inputMode="numeric"
+            className="grow text-3xl font-black text-center balance-display bg-transparent border-0 focus:outline-none"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            min="1"
+            autoFocus
+            onKeyDown={(e) => e.key === 'Enter' && send()}
+            placeholder="0"
+          />
+          <span className="text-2xl font-bold opacity-60">{cur}</span>
+        </label>
+        <div className="label py-1">
+          <span className="label-text-alt">
+            {exceeds ? (
+              <span className="text-error font-semibold">⚠ Yetersiz bakiye</span>
+            ) : numAmount > 0 ? (
+              <span className="opacity-70">Kalan: <span className="font-semibold balance-display">{fmt(remaining, cur)}</span></span>
+            ) : (
+              <span className="opacity-50">Hızlı seç ↓</span>
+            )}
+          </span>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-5 gap-1.5">
+        {[50, 100, 200, 500, 1000].map(p => (
+          <button
+            key={p}
+            type="button"
+            className="btn btn-sm btn-outline"
+            onClick={() => setAmount(String(p))}
+            disabled={p > me.balance}
+          >
+            {p}
+          </button>
+        ))}
+      </div>
+
+      <div className="modal-action mt-4">
+        <button className="btn btn-ghost flex-1" onClick={onClose} disabled={busy}>İptal</button>
+        <button className="btn btn-accent flex-[2] btn-lg" onClick={send} disabled={!canPay}>
+          {busy ? (
+            <span className="loading loading-spinner loading-sm" />
+          ) : !numAmount ? (
+            'Miktar gir'
+          ) : exceeds ? (
+            'Yetersiz bakiye'
+          ) : (
+            <>🏦 Bankaya {fmt(numAmount, cur)} Öde</>
+          )}
         </button>
       </div>
     </Modal>
   );
 }
 
-function QuickAmounts({ onPick }) {
-  const presets = [50, 100, 200, 500, 1000];
-  return (
-    <div className="flex gap-1 mt-2 flex-wrap">
-      {presets.map(p => (
-        <button key={p} type="button" className="btn btn-xs btn-outline" onClick={() => onPick(p)}>
-          {p}
-        </button>
-      ))}
-    </div>
-  );
-}
-
-function Modal({ open, onClose, title, children }) {
+function Modal({ open, onClose, title, headerColor, children }) {
   useEffect(() => {
     if (!open) return;
     const onKey = (e) => e.key === 'Escape' && onClose();
@@ -391,9 +505,23 @@ function Modal({ open, onClose, title, children }) {
 
   return (
     <dialog className={`modal ${open ? 'modal-open' : ''}`}>
-      <div className="modal-box">
-        <h3 className="font-bold text-lg mb-2">{title}</h3>
-        {children}
+      <div className="modal-box p-0 overflow-hidden border-2" style={headerColor ? { borderColor: headerColor } : undefined}>
+        {headerColor ? (
+          <div
+            className="px-4 py-3 flex items-center justify-between text-white"
+            style={{ backgroundColor: headerColor }}
+          >
+            <h3 className="font-bold text-lg">{title}</h3>
+            <button
+              onClick={onClose}
+              className="btn btn-ghost btn-sm btn-circle text-white hover:bg-white/20"
+              aria-label="Kapat"
+            >✕</button>
+          </div>
+        ) : (
+          <h3 className="font-bold text-lg p-4">{title}</h3>
+        )}
+        <div className="p-4">{children}</div>
       </div>
       <form method="dialog" className="modal-backdrop">
         <button onClick={onClose}>kapat</button>
