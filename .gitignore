@@ -2,3 +2,4 @@ node_modules/
 game-state.json
 *.tmp
 .DS_Store
+public/

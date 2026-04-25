@@ -13,7 +13,7 @@ export function mountRoutes(app) {
   app.get('/join/:token', (req, res) => {
     const player = state.findByToken(req.params.token);
     if (!player) return res.status(404).sendFile(path.resolve('public/join.html'));
-    res.cookie('playerToken', req.params.token, { httpOnly: false, sameSite: 'lax' });
+    res.cookie('playerToken', req.params.token, { httpOnly: false, sameSite: 'lax', maxAge: 30 * 24 * 60 * 60 * 1000 });
     res.redirect('/player');
   });
 

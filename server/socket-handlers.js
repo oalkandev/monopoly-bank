@@ -31,6 +31,11 @@ export function attachSockets(io) {
     socket.on('add-player', wrap(state.addPlayer));
     socket.on('remove-player', wrap(state.removePlayer));
     socket.on('start-game', wrap(state.startGame));
+    socket.on('update-config', wrap(state.updateConfig));
+    socket.on('pay-to-bank', wrap(async (p) => {
+      if (!playerId && role !== 'banker') throw new Error('Yetkisiz');
+      await state.payToBank({ playerId: playerId ?? p.playerId, amount: p.amount });
+    }));
     socket.on('transfer', wrap(async (p) => {
       if (!playerId && role !== 'banker') throw new Error('Yetkisiz');
       await state.transfer({ ...p, fromId: playerId ?? p.fromId });

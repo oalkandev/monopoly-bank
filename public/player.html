@@ -1,57 +1,15 @@
 <!doctype html>
-<html lang="tr">
+<html lang="tr" data-theme="monopoly">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Monopoly Bank</title>
-  <link rel="stylesheet" href="/style.css">
+  <script type="module" crossorigin src="/assets/player-Dad8wpI5.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/index-CkJQBHBF.js">
+  <link rel="modulepreload" crossorigin href="/assets/useSocket-DugG3HAM.js">
+  <link rel="stylesheet" crossorigin href="/assets/index-Bf0cJxCV.css">
 </head>
 <body>
-  <div id="loading" class="card">Yükleniyor…</div>
-
-  <div id="noToken" class="card" hidden>
-    <h1>Henüz katılmadın</h1>
-    <p>Bankacının QR kodunu telefon kamerasıyla tara veya verdiği linke tıkla.</p>
-  </div>
-
-  <div id="setup" class="card" hidden>
-    <h1>⏳ Oyun başlamayı bekliyor</h1>
-    <p id="setupName"></p>
-    <p style="color:#666">Bankacı oyunu başlattığında bakiyen burada görünecek.</p>
-  </div>
-
-  <div id="active" hidden>
-    <div class="card" style="text-align:center">
-      <span id="me" class="player-chip" style="font-size:18px"></span>
-      <div class="balance" id="balance"></div>
-      <div class="row">
-        <button id="sendBtn" style="flex:1">💸 Para Gönder</button>
-        <button id="goBtn" class="secondary" style="flex:1">GO ✓</button>
-      </div>
-    </div>
-    <div class="card">
-      <h2>İşlem Akışı</h2>
-      <div id="transactions"></div>
-    </div>
-  </div>
-
-  <div id="sendModal" class="modal-backdrop" hidden>
-    <div class="card">
-      <h2>Para Gönder</h2>
-      <label>Alıcı
-        <select id="recipient"></select>
-      </label>
-      <label>Miktar
-        <input id="amount" type="number" min="1" inputmode="numeric">
-      </label>
-      <div class="row" style="margin-top:16px">
-        <button id="sendCancel" class="secondary" style="flex:1">İptal</button>
-        <button id="sendConfirm" style="flex:1">Gönder</button>
-      </div>
-    </div>
-  </div>
-
-  <script src="/socket.io/socket.io.js"></script>
-  <script type="module" src="/player.js"></script>
+  <div id="root"></div>
 </body>
 </html>

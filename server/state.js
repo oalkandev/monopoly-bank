@@ -36,6 +36,20 @@ export async function startGame(config) {
   await commit(logic.startGame(state));
 }
 
+export async function updateConfig(patch) {
+  const allowed = {};
+  if (Number.isFinite(patch?.passGoBonus) && patch.passGoBonus >= 0) allowed.passGoBonus = patch.passGoBonus;
+  if (Number.isFinite(patch?.startingBalance) && patch.startingBalance > 0) allowed.startingBalance = patch.startingBalance;
+  if (typeof patch?.currency === 'string' && patch.currency.length <= 5) allowed.currency = patch.currency;
+  await commit({ ...state, config: { ...state.config, ...allowed } });
+}
+
+export async function payToBank(payload) {
+  const { playerId, amount } = payload;
+  if (!Number.isFinite(amount) || amount <= 0) throw new Error('Geçersiz miktar');
+  await commit(logic.applyBankerAdjust(state, { playerId, amount: -amount }));
+}
+
 export async function transfer(payload) { await commit(logic.applyTransfer(state, payload)); }
 export async function passGo(payload) { await commit(logic.applyPassGo(state, payload)); }
 export async function bankerAdjust(payload) { await commit(logic.applyBankerAdjust(state, payload)); }
