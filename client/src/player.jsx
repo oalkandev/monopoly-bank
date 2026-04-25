@@ -464,8 +464,8 @@ function SendModal({ open, socket, state, me, others, onClose }) {
         <label className={`input input-bordered flex items-center gap-2 h-16 ${exceeds ? 'input-error' : ''}`}>
           <input
             type="text"
-            inputMode="numeric" pattern="[0-9]*"
-            className="grow text-3xl font-black text-right balance-display bg-transparent border-0 focus:outline-none"
+            inputMode="numeric" pattern="[0-9]*" size="1"
+            className="grow min-w-0 text-3xl font-black text-right balance-display bg-transparent border-0 focus:outline-none"
             value={amount}
             onChange={(e) => setAmount(e.target.value.replace(/[^0-9]/g, ""))}
             min="1"
@@ -575,8 +575,8 @@ function PayBankModal({ open, socket, state, me, onClose }) {
         <label className={`input input-bordered flex items-center gap-2 h-16 ${exceeds ? 'input-error' : ''}`}>
           <input
             type="text"
-            inputMode="numeric" pattern="[0-9]*"
-            className="grow text-3xl font-black text-right balance-display bg-transparent border-0 focus:outline-none"
+            inputMode="numeric" pattern="[0-9]*" size="1"
+            className="grow min-w-0 text-3xl font-black text-right balance-display bg-transparent border-0 focus:outline-none"
             value={amount}
             onChange={(e) => setAmount(e.target.value.replace(/[^0-9]/g, ""))}
             min="1"
