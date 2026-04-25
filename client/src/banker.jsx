@@ -386,7 +386,7 @@ function BankerPlayerCard({ socket, player, state, onShowQr }) {
 
   const passGo = async () => {
     try {
-      await emit(socket, 'banker-adjust', { playerId: player.id, amount: state.config.passGoBonus });
+      await emit(socket, 'pass-go', { playerId: player.id });
       toast.success(`+${fmt(state.config.passGoBonus, cur)} (GO)`);
     } catch (e) { toast.error(e.message); }
   };

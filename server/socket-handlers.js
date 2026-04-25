@@ -40,9 +40,10 @@ export function attachSockets(io) {
       if (!playerId && role !== 'banker') throw new Error('Yetkisiz');
       await state.transfer({ ...p, fromId: playerId ?? p.fromId });
     }));
-    socket.on('pass-go', wrap(async () => {
-      if (!playerId) throw new Error('Yetkisiz');
-      await state.passGo({ playerId });
+    socket.on('pass-go', wrap(async (p) => {
+      if (role !== 'banker') throw new Error('Sadece bankacı GO bonusu verebilir');
+      if (!p?.playerId) throw new Error('playerId gerekli');
+      await state.passGo({ playerId: p.playerId });
     }));
     socket.on('banker-adjust', wrap(state.bankerAdjust));
     socket.on('undo', wrap(state.undo));

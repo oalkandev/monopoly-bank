@@ -99,13 +99,6 @@ function PlayingView({ socket, state, me }) {
   const [showSend, setShowSend] = useState(false);
   const [showBank, setShowBank] = useState(false);
 
-  const passGo = async () => {
-    try {
-      await emit(socket, 'pass-go');
-      toast.success(`+${fmt(state.config.passGoBonus, cur)} GO bonusu`);
-    } catch (e) { toast.error(e.message); }
-  };
-
   return (
     <>
       <div
@@ -122,18 +115,15 @@ function PlayingView({ socket, state, me }) {
           <div className="balance-display text-6xl font-black my-2 text-primary">
             {fmt(me.balance, cur)}
           </div>
-          <button className="btn btn-secondary btn-block btn-lg" onClick={passGo}>
-            🎲 GO'dan Geçtim (+{fmt(state.config.passGoBonus, cur)})
-          </button>
           <div className="grid grid-cols-2 gap-2 w-full">
             <button
-              className="btn btn-primary"
+              className="btn btn-primary btn-lg"
               onClick={() => setShowSend(true)}
               disabled={otherPlayers.length === 0}
             >
               💸 Para Gönder
             </button>
-            <button className="btn btn-accent" onClick={() => setShowBank(true)}>
+            <button className="btn btn-accent btn-lg" onClick={() => setShowBank(true)}>
               🏦 Bankaya Öde
             </button>
           </div>
