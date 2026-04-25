@@ -7,11 +7,32 @@ html, body, #root {
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', system-ui, sans-serif;
+  background:
+    radial-gradient(ellipse at top left, rgba(59, 130, 246, 0.15), transparent 60%),
+    radial-gradient(ellipse at bottom right, rgba(16, 185, 129, 0.12), transparent 60%),
+    #0f172a;
+  color: #e2e8f0;
+  min-height: 100vh;
 }
 
 .balance-display {
   font-variant-numeric: tabular-nums;
   font-feature-settings: 'tnum';
+  letter-spacing: -0.02em;
 }
+
+.card {
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(148, 163, 184, 0.1);
+}
+
+/* Subtle highlight on focus */
+.input:focus, .select:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* Money color accent */
+.money-positive { color: #22c55e; }
+.money-negative { color: #ef4444; }
