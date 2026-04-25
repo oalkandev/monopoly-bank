@@ -22,17 +22,6 @@ body {
   letter-spacing: -0.02em;
 }
 
-.card {
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(148, 163, 184, 0.1);
-}
-
-/* Subtle highlight on focus */
-.input:focus, .select:focus {
-  outline: 2px solid #3b82f6;
-  outline-offset: 2px;
-}
-
 /* Money color accent */
 .money-positive { color: #22c55e; }
 .money-negative { color: #ef4444; }

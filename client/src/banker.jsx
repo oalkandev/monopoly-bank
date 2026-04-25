@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import toast, { Toaster } from 'react-hot-toast';
 import { useSocket } from './useSocket.js';
@@ -14,6 +14,14 @@ function fmt(n, currency) {
 
 function App() {
   const { socket, state, connected } = useSocket({ role: 'banker' });
+  const [lanUrl, setLanUrl] = useState(location.origin);
+
+  useEffect(() => {
+    fetch('/api/server-info')
+      .then(r => r.json())
+      .then(d => { if (d.lanUrl) setLanUrl(d.lanUrl); })
+      .catch(() => {});
+  }, []);
 
   if (!state) {
     return (
@@ -26,28 +34,31 @@ function App() {
   return (
     <div className="min-h-screen p-4 max-w-6xl mx-auto">
       <Toaster position="top-right" />
-      <Header connected={connected} />
+      <Header connected={connected} lanUrl={lanUrl} />
       {state.status === 'setup'
-        ? <SetupView socket={socket} state={state} />
+        ? <SetupView socket={socket} state={state} lanUrl={lanUrl} />
         : <ActiveView socket={socket} state={state} />}
     </div>
   );
 }
 
-function Header({ connected }) {
+function Header({ connected, lanUrl }) {
   return (
-    <div className="flex items-center justify-between mb-6">
+    <div className="flex items-center justify-between mb-6 flex-wrap gap-2">
       <h1 className="text-3xl font-black flex items-center gap-2">
         <span className="text-4xl">🏦</span> Monopoly Bank
       </h1>
-      <div className={`badge badge-lg ${connected ? 'badge-success' : 'badge-error'}`}>
-        {connected ? '● Bağlı' : '○ Bağlantı yok'}
+      <div className="flex items-center gap-2">
+        <code className="text-xs opacity-70 bg-base-300 px-2 py-1 rounded">{lanUrl}</code>
+        <div className={`badge badge-lg ${connected ? 'badge-success' : 'badge-error'}`}>
+          {connected ? '● Bağlı' : '○ Bağlantı yok'}
+        </div>
       </div>
     </div>
   );
 }
 
-function SetupView({ socket, state }) {
+function SetupView({ socket, state, lanUrl }) {
   const [name, setName] = useState('');
   const [color, setColor] = useState(PLAYER_COLORS[state.players.length % PLAYER_COLORS.length]);
   const [startingBalance, setStartingBalance] = useState(state.config.startingBalance);
@@ -130,7 +141,7 @@ function SetupView({ socket, state }) {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
             {state.players.map(p => (
-              <PlayerJoinCard key={p.id} player={p} onRemove={() => removePlayer(p.id, p.name)} />
+              <PlayerJoinCard key={p.id} player={p} lanUrl={lanUrl} onRemove={() => removePlayer(p.id, p.name)} />
             ))}
           </div>
         </div>
@@ -148,8 +159,8 @@ function SetupView({ socket, state }) {
   );
 }
 
-function PlayerJoinCard({ player, onRemove }) {
-  const link = `${location.origin}/join/${player.token}`;
+function PlayerJoinCard({ player, lanUrl, onRemove }) {
+  const link = `${lanUrl}/join/${player.token}`;
   const [copied, setCopied] = useState(false);
 
   const copy = async () => {

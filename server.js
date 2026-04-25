@@ -12,15 +12,22 @@ const httpServer = createServer(app);
 const io = new Server(httpServer);
 const PORT = process.env.PORT ? Number(process.env.PORT) : 3000;
 
+function getLanIp() {
+  return Object.values(os.networkInterfaces())
+    .flat()
+    .find(i => i.family === 'IPv4' && !i.internal)?.address ?? 'localhost';
+}
+
+const lanIp = getLanIp();
+const lanUrl = `http://${lanIp}:${PORT}`;
+
+app.get('/api/server-info', (_req, res) => res.json({ lanUrl }));
+
 await state.init();
 mountRoutes(app);
 attachSockets(io);
 
 httpServer.listen(PORT, '0.0.0.0', () => {
-  const ip = Object.values(os.networkInterfaces())
-    .flat()
-    .find(i => i.family === 'IPv4' && !i.internal)?.address ?? 'localhost';
-  const url = `http://${ip}:${PORT}/banker`;
-  console.log(`\n🎲 Monopoly Bank hazır:\n  Bankacı: ${url}\n  Oyuncu: http://${ip}:${PORT}/player\n`);
-  qrcode.generate(url, { small: true });
+  console.log(`\n🎲 Monopoly Bank hazır:\n  Bankacı: ${lanUrl}/banker\n  Oyuncu:  ${lanUrl}/player\n`);
+  qrcode.generate(`${lanUrl}/banker`, { small: true });
 });
