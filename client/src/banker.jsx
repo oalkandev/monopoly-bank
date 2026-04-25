@@ -444,8 +444,8 @@ function BankerPlayerCard({ socket, player, state, onShowQr }) {
           <button className="btn btn-success btn-sm join-item" onClick={() => adjust(1)} title="Para ver">+</button>
           <button className="btn btn-error btn-sm join-item" onClick={() => adjust(-1)} title="Para al">−</button>
         </div>
-        <div className="grid grid-cols-5 gap-1 mt-1">
-          {[50, 100, 200, 500, 1000].map(n => (
+        <div className="grid grid-cols-6 gap-1 mt-1">
+          {[1, 5, 10, 50, 100, 500].map(n => (
             <button
               key={n}
               type="button"

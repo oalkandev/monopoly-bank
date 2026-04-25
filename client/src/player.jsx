@@ -406,8 +406,8 @@ function SendModal({ open, socket, state, me, others, onClose }) {
             </button>
           )}
         </div>
-        <div className="grid grid-cols-5 gap-1.5">
-          {[50, 100, 200, 500, 1000].map(p => (
+        <div className="grid grid-cols-6 gap-1.5">
+          {[1, 5, 10, 50, 100, 500].map(p => (
             <button
               key={p}
               type="button"
@@ -517,8 +517,8 @@ function PayBankModal({ open, socket, state, me, onClose }) {
             </button>
           )}
         </div>
-        <div className="grid grid-cols-5 gap-1.5">
-          {[50, 100, 200, 500, 1000].map(p => (
+        <div className="grid grid-cols-6 gap-1.5">
+          {[1, 5, 10, 50, 100, 500].map(p => (
             <button
               key={p}
               type="button"
