@@ -12,6 +12,8 @@ function readEnabled() {
 let pool = null;
 let poolIdx = 0;
 let unlocked = false;
+let lastPlayAt = 0;
+const MIN_INTERVAL_MS = 800;
 
 function buildPool() {
   if (pool) return pool;
@@ -55,12 +57,17 @@ function unlockPool() {
 
 function play() {
   if (!pool || pool.length === 0) return;
-  const a = pool[poolIdx];
+  const now = Date.now();
+  if (now - lastPlayAt < MIN_INTERVAL_MS) return; // throttle
+  lastPlayAt = now;
+
+  // Halen çalan slotları bul, çalmayan ilk slotu kullan
+  const candidate = pool.find(a => a.paused || a.ended) ?? pool[poolIdx];
   poolIdx = (poolIdx + 1) % pool.length;
   try {
-    a.pause();
-    a.currentTime = 0;
-    const p = a.play();
+    candidate.pause();
+    candidate.currentTime = 0;
+    const p = candidate.play();
     if (p && typeof p.catch === 'function') p.catch(() => {});
   } catch (e) {
     // ignore
