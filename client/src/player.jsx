@@ -648,8 +648,8 @@ function Modal({ open, onClose, title, headerColor, children }) {
   }, [open, onClose]);
 
   return (
-    <dialog className={`modal ${open ? 'modal-open' : ''}`}>
-      <div className="modal-box p-0 overflow-hidden border-2" style={headerColor ? { borderColor: headerColor } : undefined}>
+    <dialog className={`modal modal-bottom sm:modal-middle ${open ? 'modal-open' : ''}`}>
+      <div className="modal-box w-full max-w-md p-0 overflow-hidden border-2" style={headerColor ? { borderColor: headerColor } : undefined}>
         <div
           className={`px-4 py-3 flex items-center justify-between ${headerColor ? 'text-white' : 'border-b border-base-300'}`}
           style={headerColor ? { backgroundColor: headerColor } : undefined}
