@@ -433,8 +433,8 @@ function BankerPlayerCard({ socket, player, state, onShowQr }) {
           <button className="btn btn-success btn-sm join-item" onClick={() => adjust(1)} title="Para ver">+</button>
           <button className="btn btn-error btn-sm join-item" onClick={() => adjust(-1)} title="Para al">−</button>
         </div>
-        <button className="btn btn-ghost btn-xs mt-1" onClick={passGo}>
-          🎲 GO bonusu (+{fmt(state.config.passGoBonus, cur)})
+        <button className="btn btn-outline btn-warning btn-block mt-2" onClick={passGo}>
+          🎲 GO Bonusu Ver (+{fmt(state.config.passGoBonus, cur)})
         </button>
       </div>
     </div>
