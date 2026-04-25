@@ -1,13 +1,23 @@
 <!doctype html>
-<html lang="tr" data-theme="monopoly">
+<html lang="tr" data-theme="monopoly-dark">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Monopoly Bank</title>
-  <script type="module" crossorigin src="/assets/player-D6TdoBYS.js"></script>
-  <link rel="modulepreload" crossorigin href="/assets/index-Uby1hmnt.js">
-  <link rel="modulepreload" crossorigin href="/assets/useSocket-FnhCB1U6.js">
-  <link rel="stylesheet" crossorigin href="/assets/index-CCTwXa7U.css">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem('monopoly-theme');
+        if (t === 'monopoly-light' || t === 'monopoly-dark') {
+          document.documentElement.dataset.theme = t;
+        }
+      } catch (e) {}
+    })();
+  </script>
+  <script type="module" crossorigin src="/assets/player-DwRKeRFt.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/index-gY99sbw5.js">
+  <link rel="modulepreload" crossorigin href="/assets/ThemeToggle-B7G45qww.js">
+  <link rel="stylesheet" crossorigin href="/assets/index-YIp_ZDE_.css">
 </head>
 <body>
   <div id="root"></div>

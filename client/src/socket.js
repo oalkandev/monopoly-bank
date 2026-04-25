@@ -38,3 +38,16 @@ export function txDirection(t, meId) {
   if (t.to === meId) return 'in';
   return 'neutral';
 }
+
+export function formatRelative(ts) {
+  const diff = Math.max(0, Date.now() - ts);
+  const sec = Math.floor(diff / 1000);
+  if (sec < 10) return 'şimdi';
+  if (sec < 60) return `${sec}s önce`;
+  const min = Math.floor(sec / 60);
+  if (min < 60) return `${min}dk önce`;
+  const hr = Math.floor(min / 60);
+  if (hr < 24) return `${hr}sa önce`;
+  const day = Math.floor(hr / 24);
+  return `${day}g önce`;
+}
