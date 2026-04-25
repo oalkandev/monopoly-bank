@@ -6,6 +6,7 @@ import { useWakeLock } from './useWakeLock.js';
 import { emit, describeTx, txDirection, formatRelative } from './socket.js';
 import { ThemeToggle } from './ThemeToggle.jsx';
 import { useTheme } from './useTheme.js';
+import { useSoundSetting, useReceiveSound } from './useReceiveSound.js';
 import '../index.css';
 
 function getCookie(name) {
@@ -18,6 +19,7 @@ function fmt(n, currency) {
 
 function App() {
   useTheme();
+  const sound = useSoundSetting();
   const cookieToken = getCookie('playerToken');
   useWakeLock(true);
 
@@ -39,15 +41,15 @@ function App() {
   return (
     <div className="min-h-screen p-4 max-w-md mx-auto">
       <Toaster position="top-center" toastOptions={{ duration: 2000 }} />
-      <TopBar connected={connected} />
+      <TopBar connected={connected} sound={sound} />
       {state.status === 'setup'
         ? <WaitingView me={me} />
-        : <PlayingView socket={socket} state={state} me={me} />}
+        : <PlayingView socket={socket} state={state} me={me} sound={sound} />}
     </div>
   );
 }
 
-function TopBar({ connected }) {
+function TopBar({ connected, sound }) {
   return (
     <div className="navbar bg-base-200 rounded-box mb-4 min-h-0 py-1 px-3">
       <div className="flex-1">
@@ -55,7 +57,15 @@ function TopBar({ connected }) {
           {connected ? '● bağlı' : '○ bağlanılıyor'}
         </div>
       </div>
-      <div className="flex-none">
+      <div className="flex-none gap-1">
+        <button
+          onClick={sound.toggle}
+          className="btn btn-ghost btn-circle btn-sm"
+          title={sound.enabled ? 'Sesi kapat' : 'Sesi aç'}
+          aria-label={sound.enabled ? 'Sesi kapat' : 'Sesi aç'}
+        >
+          <span className="text-lg">{sound.enabled ? '🔔' : '🔕'}</span>
+        </button>
         <ThemeToggle size="sm" />
       </div>
     </div>
@@ -93,11 +103,13 @@ function WaitingView({ me }) {
   );
 }
 
-function PlayingView({ socket, state, me }) {
+function PlayingView({ socket, state, me, sound }) {
   const cur = state.config.currency;
   const otherPlayers = state.players.filter(p => p.id !== me.id);
   const [showSend, setShowSend] = useState(false);
   const [showBank, setShowBank] = useState(false);
+
+  useReceiveSound(me.balance, sound.enabled);
 
   return (
     <>
