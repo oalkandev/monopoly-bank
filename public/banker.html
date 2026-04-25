@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Monopoly Bank — Bankacı</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <h1>🏦 Bankacı Paneli</h1>
+
+  <section id="setup" class="card" hidden>
+    <h2>Oyun Kurulumu</h2>
+    <div class="row" style="gap:16px">
+      <label style="flex:1">Başlangıç Parası
+        <input id="startingBalance" type="number" value="1500" min="1">
+      </label>
+      <label style="flex:1">GO Bonusu
+        <input id="passGoBonus" type="number" value="200" min="0">
+      </label>
+    </div>
+    <hr>
+    <h3>Oyuncu Ekle</h3>
+    <div class="row">
+      <input id="newName" placeholder="Oyuncu adı">
+      <input id="newColor" type="color" value="#e53935">
+      <button id="addPlayer">Ekle</button>
+    </div>
+    <div id="players" class="grid" style="margin-top:16px"></div>
+    <button id="startGame" style="margin-top:16px; width: 100%; font-size: 18px" disabled>
+      Oyunu Başlat
+    </button>
+  </section>
+
+  <section id="active" hidden>
+    <div class="card">
+      <h2>Oyuncular</h2>
+      <div id="activePlayers" class="grid"></div>
+    </div>
+    <div class="card">
+      <h2>İşlem Geçmişi</h2>
+      <div id="transactions"></div>
+    </div>
+    <div class="card">
+      <button id="reset" class="danger" style="width:100%">Oyunu Sıfırla</button>
+    </div>
+  </section>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script type="module" src="/banker.js"></script>
+</body>
+</html>
