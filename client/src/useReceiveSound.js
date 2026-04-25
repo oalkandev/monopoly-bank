@@ -52,18 +52,43 @@ export function useReceiveSound(balance, enabled = true) {
   const unlocked = useRef(false);
 
   // İlk kullanıcı etkileşiminde audio context'i ayağa kaldır (autoplay kısıtlaması)
+  // iOS Safari için: gerçekten sessiz bir buffer çal ki context "warm" olsun.
   useEffect(() => {
     const unlock = () => {
       if (unlocked.current) return;
       const ctx = getCtx();
-      if (ctx) unlocked.current = true;
+      if (!ctx) return;
+      try {
+        // Boş 1 sample'lık buffer çal — iOS'ta context'i tam aktive eder
+        const buffer = ctx.createBuffer(1, 1, 22050);
+        const src = ctx.createBufferSource();
+        src.buffer = buffer;
+        src.connect(ctx.destination);
+        src.start(0);
+        // resume() de mutlaka kullanıcı gesture'ından çağrılmalı
+        if (ctx.state === 'suspended') ctx.resume();
+        unlocked.current = true;
+      } catch (e) {
+        // ignore
+      }
     };
     document.addEventListener('click', unlock);
-    document.addEventListener('touchstart', unlock);
+    document.addEventListener('touchend', unlock);
     return () => {
       document.removeEventListener('click', unlock);
-      document.removeEventListener('touchstart', unlock);
+      document.removeEventListener('touchend', unlock);
     };
+  }, []);
+
+  // Sayfa görünür olduğunda context'i resume et (iOS arka plan/ön plan döngüsü)
+  useEffect(() => {
+    const onVis = () => {
+      if (document.visibilityState === 'visible' && sharedCtx?.state === 'suspended') {
+        sharedCtx.resume().catch(() => {});
+      }
+    };
+    document.addEventListener('visibilitychange', onVis);
+    return () => document.removeEventListener('visibilitychange', onVis);
   }, []);
 
   useEffect(() => {
