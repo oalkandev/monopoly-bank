@@ -3,14 +3,12 @@ import { createServer } from 'node:http';
 import { Server } from 'socket.io';
 import os from 'node:os';
 import qrcode from 'qrcode-terminal';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { mountRoutes } from './server/routes.js';
 import { attachSockets } from './server/socket-handlers.js';
 import * as state from './server/state.js';
-
-const app = express();
-const httpServer = createServer(app);
-const io = new Server(httpServer);
-const PORT = process.env.PORT ? Number(process.env.PORT) : 3000;
+import * as persistence from './server/persistence.js';
 
 function getLanIp() {
   return Object.values(os.networkInterfaces())
@@ -18,16 +16,58 @@ function getLanIp() {
     .find(i => i.family === 'IPv4' && !i.internal)?.address ?? 'localhost';
 }
 
-const lanIp = getLanIp();
-const lanUrl = `http://${lanIp}:${PORT}`;
+/**
+ * Sunucuyu başlatır. Hem CLI hem Electron main process tarafından çağrılır.
+ * @param {object} options
+ * @param {number} options.port  0 verilirse OS boş bir port atar.
+ * @param {string} [options.publicDir]  Frontend static dosyalarının olduğu klasör (Electron'da packaged path).
+ * @param {string} [options.dataFile]  game-state.json'ın yazılacağı tam yol.
+ * @param {boolean} [options.printQr]  Konsola QR kodu basılsın mı (CLI true, Electron false).
+ * @returns {Promise<{httpServer, io, port, lanUrl, close}>}
+ */
+export async function startServer({
+  port = 3000,
+  publicDir,
+  dataFile,
+  printQr = false,
+} = {}) {
+  if (publicDir) process.env.MONOPOLY_PUBLIC_DIR = publicDir;
+  if (dataFile) persistence.setFile(dataFile);
 
-app.get('/api/server-info', (_req, res) => res.json({ lanUrl }));
+  const app = express();
+  const httpServer = createServer(app);
+  const io = new Server(httpServer);
 
-await state.init();
-mountRoutes(app);
-attachSockets(io);
+  await new Promise((resolve) => httpServer.listen(port, '0.0.0.0', resolve));
 
-httpServer.listen(PORT, '0.0.0.0', () => {
-  console.log(`\n🎲 Monopoly Bank hazır:\n  Bankacı: ${lanUrl}/banker\n  Oyuncu:  ${lanUrl}/player\n`);
-  qrcode.generate(`${lanUrl}/banker`, { small: true });
-});
+  const actualPort = httpServer.address().port;
+  const lanIp = getLanIp();
+  const lanUrl = `http://${lanIp}:${actualPort}`;
+
+  await state.init();
+  app.get('/api/server-info', (_req, res) => res.json({ lanUrl }));
+  mountRoutes(app);
+  attachSockets(io);
+
+  if (printQr) {
+    console.log(`\n🎲 Monopoly Bank hazır:\n  Bankacı: ${lanUrl}/banker\n  Oyuncu:  ${lanUrl}/player\n`);
+    qrcode.generate(`${lanUrl}/banker`, { small: true });
+  }
+
+  return {
+    httpServer,
+    io,
+    port: actualPort,
+    lanUrl,
+    close: () => new Promise((resolve) => {
+      io.close(() => httpServer.close(resolve));
+    }),
+  };
+}
+
+// CLI olarak çalıştırıldığında otomatik başlat
+const isMain = import.meta.url === `file://${process.argv[1]}`;
+if (isMain) {
+  const port = process.env.PORT ? Number(process.env.PORT) : 3000;
+  await startServer({ port, printQr: true });
+}

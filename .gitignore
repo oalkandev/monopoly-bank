@@ -3,3 +3,4 @@ game-state.json
 *.tmp
 .DS_Store
 public/
+dist-electron/
