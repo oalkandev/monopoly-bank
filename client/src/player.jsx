@@ -108,12 +108,18 @@ function PlayingView({ socket, state, me }) {
 
   return (
     <>
-      <div className="card bg-base-200 shadow-xl mb-4">
+      <div
+        className="card bg-base-200 shadow-xl mb-4 overflow-hidden border-2"
+        style={{ borderColor: me.color }}
+      >
+        <div
+          className="px-4 py-3 text-center text-white"
+          style={{ backgroundColor: me.color }}
+        >
+          <span className="font-black text-xl tracking-wide drop-shadow">{me.name}</span>
+        </div>
         <div className="card-body items-center text-center p-5">
-          <div className="badge badge-lg text-white font-bold text-base px-4 py-3" style={{ backgroundColor: me.color }}>
-            {me.name}
-          </div>
-          <div className="balance-display text-6xl font-black my-3 text-primary">
+          <div className="balance-display text-6xl font-black my-2 text-primary">
             {fmt(me.balance, cur)}
           </div>
           <button className="btn btn-secondary btn-block btn-lg" onClick={passGo}>
@@ -163,22 +169,24 @@ function PlayerList({ state, me }) {
   return (
     <div className="card bg-base-200 shadow-md mb-4">
       <div className="card-body p-4">
-        <h3 className="font-bold text-sm opacity-70 uppercase tracking-wide">Diğer oyuncular</h3>
-        <ul className="menu menu-sm bg-base-100 rounded-box p-1">
+        <h3 className="font-bold text-sm opacity-70 uppercase tracking-wide mb-2">Diğer oyuncular</h3>
+        <div className="space-y-1.5">
           {others.map(p => (
-            <li key={p.id}>
-              <div className="flex items-center justify-between hover:bg-base-300/50">
+            <div
+              key={p.id}
+              className="flex items-center gap-3 rounded-lg overflow-hidden bg-base-100 border-l-4"
+              style={{ borderLeftColor: p.color }}
+            >
+              <div className="flex-1 px-3 py-2 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className={`badge badge-xs ${p.online ? 'badge-success' : 'badge-ghost'}`} />
-                  <span className="badge text-white font-bold" style={{ backgroundColor: p.color }}>
-                    {p.name}
-                  </span>
+                  <span className="font-bold" style={{ color: p.color }}>{p.name}</span>
+                  <span className={`badge badge-xs ${p.online ? 'badge-success' : 'badge-ghost'}`} />
                 </div>
                 <span className="font-bold balance-display">{fmt(p.balance, cur)}</span>
               </div>
-            </li>
+            </div>
           ))}
-        </ul>
+        </div>
       </div>
     </div>
   );

@@ -198,20 +198,28 @@ function PlayerJoinCard({ player, lanUrl, onRemove }) {
   };
 
   return (
-    <div className="card bg-base-100 shadow-sm">
+    <div
+      className="card bg-base-100 shadow-sm overflow-hidden border-2"
+      style={{ borderColor: player.color }}
+    >
+      <div
+        className="px-3 py-2 flex items-center justify-between text-white"
+        style={{ backgroundColor: player.color }}
+      >
+        <span className="font-bold text-sm drop-shadow-sm">{player.name}</span>
+        <button
+          className="btn btn-ghost btn-xs text-white hover:bg-white/20"
+          onClick={onRemove}
+          aria-label="Sil"
+        >✕</button>
+      </div>
       <div className="card-body p-3">
-        <div className="flex items-center justify-between">
-          <div className="badge badge-lg text-white font-bold" style={{ backgroundColor: player.color }}>
-            {player.name}
-          </div>
-          <button className="btn btn-ghost btn-xs text-error" onClick={onRemove}>✕</button>
-        </div>
-        <div className="flex gap-3 items-center mt-2">
+        <div className="flex gap-3 items-center">
           <QrCode value={link} size={110} />
           <div className="flex-1 min-w-0">
             <p className="text-xs opacity-60 mb-1">QR'ı tara veya:</p>
             <button className="btn btn-sm btn-outline w-full" onClick={copy}>
-              {copied ? '✓ Kopyalandı' : '📋 Linki Kopyala'}
+              {copied ? '✓ Kopyalandı' : '📋 Kopyala'}
             </button>
           </div>
         </div>
@@ -384,26 +392,31 @@ function BankerPlayerCard({ socket, player, state, onShowQr }) {
   };
 
   return (
-    <div className="card bg-base-200 shadow-md hover:shadow-lg transition-shadow">
-      <div className="card-body p-4">
-        <div className="flex items-center justify-between">
-          <div className="badge badge-lg text-white font-bold" style={{ backgroundColor: player.color }}>
-            {player.name}
-          </div>
-          <div className="flex items-center gap-1">
-            <div className={`badge badge-xs ${player.online ? 'badge-success' : 'badge-ghost'}`} />
-            <span className="text-xs opacity-60">{player.online ? 'çevrimiçi' : 'çevrimdışı'}</span>
-            <button
-              className="btn btn-ghost btn-xs btn-circle"
-              onClick={onShowQr}
-              title="QR kodu göster"
-              aria-label="QR kodu göster"
-            >
-              <span className="text-base">📱</span>
-            </button>
-          </div>
+    <div
+      className="card bg-base-200 shadow-md hover:shadow-xl transition-all overflow-hidden border-2"
+      style={{ borderColor: player.color }}
+    >
+      <div
+        className="px-4 py-2 flex items-center justify-between text-white"
+        style={{ backgroundColor: player.color }}
+      >
+        <span className="font-black text-base tracking-wide drop-shadow-sm">{player.name}</span>
+        <div className="flex items-center gap-1">
+          <span className="text-xs font-medium opacity-90">
+            {player.online ? '● çevrimiçi' : '○ çevrimdışı'}
+          </span>
+          <button
+            className="btn btn-ghost btn-xs btn-circle text-white hover:bg-white/20"
+            onClick={onShowQr}
+            title="QR kodu göster"
+            aria-label="QR kodu göster"
+          >
+            <span className="text-base">📱</span>
+          </button>
         </div>
-        <div className="balance-display text-center text-3xl xl:text-4xl font-black my-2">
+      </div>
+      <div className="card-body p-4">
+        <div className="balance-display text-center text-3xl xl:text-4xl font-black my-1">
           {fmt(player.balance, cur)}
         </div>
         <div className="join w-full">
