@@ -443,6 +443,8 @@ function BankerPlayerCard({ socket, player, state, onShowQr }) {
 
 function TransactionFeed({ socket, state }) {
   const [, force] = useState(0);
+  const [filter, setFilter] = useState('all'); // 'all' | 'bank' | 'player:<id>'
+
   useEffect(() => {
     const id = setInterval(() => force(n => n + 1), 30000);
     return () => clearInterval(id);
@@ -453,27 +455,96 @@ function TransactionFeed({ socket, state }) {
     catch (e) { toast.error(e.message); }
   };
 
-  const txs = [...state.transactions].reverse();
+  const allTxs = [...state.transactions].reverse();
+  const txs = allTxs.filter(t => matchFilter(t, filter));
 
   return (
     <div className="card bg-base-200 shadow-md sticky top-4">
       <div className="card-body p-4">
         <div className="flex items-center justify-between">
           <h2 className="card-title text-base">📜 İşlem Geçmişi</h2>
-          <span className="badge badge-ghost badge-sm">{txs.length}</span>
+          <span className="badge badge-ghost badge-sm">
+            {filter === 'all' ? allTxs.length : `${txs.length}/${allTxs.length}`}
+          </span>
         </div>
-        {txs.length === 0 && (
+
+        <FilterBar state={state} filter={filter} setFilter={setFilter} />
+
+        {allTxs.length === 0 ? (
           <div className="text-center py-8 opacity-50 text-sm">
             <div className="text-3xl mb-2">📭</div>
             Henüz işlem yok
           </div>
+        ) : txs.length === 0 ? (
+          <div className="text-center py-8 opacity-50 text-sm">
+            <div className="text-3xl mb-2">🔍</div>
+            Bu filtreye uyan işlem yok
+          </div>
+        ) : (
+          <div className="overflow-y-auto max-h-[65vh] -mx-2 px-2">
+            {txs.map(t => (
+              <TxRow key={t.id} tx={t} state={state} onUndo={undo} />
+            ))}
+          </div>
         )}
-        <div className="overflow-y-auto max-h-[70vh] -mx-2 px-2">
-          {txs.map(t => (
-            <TxRow key={t.id} tx={t} state={state} onUndo={undo} />
-          ))}
-        </div>
       </div>
+    </div>
+  );
+}
+
+function matchFilter(tx, filter) {
+  if (filter === 'all') return true;
+  if (filter === 'bank') {
+    // Banka taraflı: en az bir taraf yok (yani Banka)
+    return !tx.from || !tx.to;
+  }
+  if (filter.startsWith('player:')) {
+    const id = filter.slice(7);
+    return tx.from === id || tx.to === id;
+  }
+  return true;
+}
+
+function FilterBar({ state, filter, setFilter }) {
+  const FilterChip = ({ value, label, color, active }) => (
+    <button
+      type="button"
+      onClick={() => setFilter(value)}
+      className={`px-2.5 py-1 rounded-full text-xs font-bold border-2 transition-all whitespace-nowrap ${active ? 'shadow-sm scale-105' : 'opacity-60 hover:opacity-100'}`}
+      style={{
+        borderColor: color,
+        backgroundColor: active ? color : 'transparent',
+        color: active ? 'white' : color,
+      }}
+    >
+      {label}
+    </button>
+  );
+
+  return (
+    <div className="flex gap-1.5 flex-wrap mt-1 mb-2">
+      <button
+        type="button"
+        onClick={() => setFilter('all')}
+        className={`btn btn-xs ${filter === 'all' ? 'btn-primary' : 'btn-ghost'}`}
+      >
+        Tümü
+      </button>
+      <FilterChip
+        value="bank"
+        label="🏦 Banka"
+        color="#64748b"
+        active={filter === 'bank'}
+      />
+      {state.players.map(p => (
+        <FilterChip
+          key={p.id}
+          value={`player:${p.id}`}
+          label={p.name}
+          color={p.color}
+          active={filter === `player:${p.id}`}
+        />
+      ))}
     </div>
   );
 }

@@ -192,49 +192,83 @@ const TX_META = {
 
 function TransactionFeed({ state, me }) {
   const cur = state.config.currency;
-  const txs = [...state.transactions].slice(-30).reverse();
+  const [filter, setFilter] = useState('all'); // 'all' | 'me' | 'bank'
+  const allTxs = [...state.transactions].slice(-100).reverse();
 
-  if (txs.length === 0) {
-    return (
-      <div className="card bg-base-200 shadow-md mb-4">
-        <div className="card-body p-4 text-center opacity-50">
-          <div className="text-3xl">📭</div>
-          <p className="text-sm">Henüz işlem yok</p>
-        </div>
-      </div>
-    );
-  }
+  const filterFn = (t) => {
+    if (filter === 'all') return true;
+    if (filter === 'me') return t.from === me.id || t.to === me.id;
+    if (filter === 'bank') return !t.from || !t.to;
+    return true;
+  };
+  const txs = allTxs.filter(filterFn);
 
   return (
     <div className="card bg-base-200 shadow-md mb-4">
       <div className="card-body p-4">
         <div className="flex items-center justify-between">
           <h3 className="font-bold text-sm opacity-70 uppercase tracking-wide">İşlem akışı</h3>
-          <span className="badge badge-ghost badge-sm">{txs.length}</span>
+          <span className="badge badge-ghost badge-sm">
+            {filter === 'all' ? allTxs.length : `${txs.length}/${allTxs.length}`}
+          </span>
         </div>
-        <div className="divider my-1" />
-        <ul className="space-y-1 max-h-80 overflow-y-auto">
-          {txs.map(t => {
-            const dir = txDirection(t, me.id);
-            const meta = TX_META[t.type] ?? { icon: '•', color: 'opacity-60' };
-            const sign = dir === 'in' ? '+' : dir === 'out' ? '−' : '';
-            const amountClass = t.undone
-              ? 'opacity-40 line-through'
-              : dir === 'in' ? 'text-success font-bold'
-              : dir === 'out' ? 'text-error font-bold'
-              : '';
-            return (
-              <li key={t.id} className={`flex items-center gap-2 py-1 px-2 rounded hover:bg-base-300/30 ${t.undone ? 'opacity-50' : ''}`}>
-                <span className={`text-base ${meta.color}`}>{meta.icon}</span>
-                <span className="flex-1 text-sm truncate">{describeTx(t, state.players)}</span>
-                <span className={`balance-display ${amountClass}`}>
-                  {sign}{fmt(t.amount, cur)}
-                </span>
-                <span className="text-xs opacity-50 w-14 text-right">{formatRelative(t.ts)}</span>
-              </li>
-            );
-          })}
-        </ul>
+
+        <div role="tablist" className="tabs tabs-boxed tabs-sm bg-base-300 mt-2">
+          <button
+            type="button"
+            role="tab"
+            className={`tab ${filter === 'all' ? 'tab-active' : ''}`}
+            onClick={() => setFilter('all')}
+          >Tümü</button>
+          <button
+            type="button"
+            role="tab"
+            className={`tab ${filter === 'me' ? 'tab-active' : ''}`}
+            onClick={() => setFilter('me')}
+            style={filter === 'me' ? { backgroundColor: me.color, color: 'white' } : undefined}
+          >Ben</button>
+          <button
+            type="button"
+            role="tab"
+            className={`tab ${filter === 'bank' ? 'tab-active' : ''}`}
+            onClick={() => setFilter('bank')}
+          >🏦 Banka</button>
+        </div>
+
+        {allTxs.length === 0 ? (
+          <div className="text-center py-6 opacity-50 text-sm">
+            <div className="text-3xl">📭</div>
+            <p>Henüz işlem yok</p>
+          </div>
+        ) : txs.length === 0 ? (
+          <div className="text-center py-6 opacity-50 text-sm">
+            <div className="text-3xl">🔍</div>
+            <p>Bu filtreye uyan işlem yok</p>
+          </div>
+        ) : (
+          <ul className="space-y-1 max-h-80 overflow-y-auto mt-2">
+            {txs.map(t => {
+              const dir = txDirection(t, me.id);
+              const meta = TX_META[t.type] ?? { icon: '•', color: 'opacity-60' };
+              const sign = dir === 'in' ? '+' : dir === 'out' ? '−' : '';
+              const amountClass = t.undone
+                ? 'opacity-40 line-through'
+                : dir === 'in' ? 'text-success font-bold'
+                : dir === 'out' ? 'text-error font-bold'
+                : '';
+              return (
+                <li key={t.id} className={`flex items-center gap-2 py-1 px-2 rounded hover:bg-base-300/30 ${t.undone ? 'opacity-50' : ''}`}>
+                  <span className={`text-base ${meta.color}`}>{meta.icon}</span>
+                  <span className="flex-1 text-sm truncate">{describeTx(t, state.players)}</span>
+                  <span className={`balance-display ${amountClass}`}>
+                    {sign}{fmt(t.amount, cur)}
+                  </span>
+                  <span className="text-xs opacity-50 w-14 text-right">{formatRelative(t.ts)}</span>
+                </li>
+              );
+            })}
+          </ul>
+        )}
       </div>
     </div>
   );
