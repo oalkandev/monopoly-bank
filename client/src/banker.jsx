@@ -85,8 +85,8 @@ function Header({ connected, lanUrl, socket, state }) {
       </h1>
       <div className="flex items-center gap-2 flex-wrap">
         <code className="text-xs opacity-70 bg-base-300 px-2 py-1 rounded hidden sm:inline">{lanUrl}</code>
-        {state.status === 'active' && state.startedAt && (
-          <GameTimer startedAt={state.startedAt} />
+        {state.status === 'active' && (
+          <GameTimer startedAt={state.startedAt ?? state.transactions?.[0]?.ts ?? Date.now()} />
         )}
         <ConnectionBadge connected={connected} />
         <ThemeToggle />
