@@ -455,7 +455,7 @@ function BankerPlayerCard({ socket, player, state, onShowQr }) {
           </button>
         </div>
       </div>
-      <div className="card-body p-4 gap-3">
+      <div className="card-body p-4 gap-5">
         <div className="balance-display text-center text-3xl xl:text-4xl font-black">
           {fmt(player.balance, cur)}
         </div>
