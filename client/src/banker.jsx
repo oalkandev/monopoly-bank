@@ -8,6 +8,7 @@ import { ThemeToggle } from './ThemeToggle.jsx';
 import { useTheme } from './useTheme.js';
 import { ConnectionBadge } from './ConnectionBadge.jsx';
 import { DiceNotification } from './DiceNotification.jsx';
+import { copyText } from './clipboard.js';
 import {
   QrCode as QrIcon, Dices, Plus, Minus, RotateCcw, MoreVertical, Trash2, Copy, Check, Pencil,
 } from 'lucide-react';
@@ -214,11 +215,13 @@ function PlayerJoinCard({ player, lanUrl, onRemove }) {
   const [copied, setCopied] = useState(false);
 
   const copy = async () => {
-    try {
-      await navigator.clipboard.writeText(link);
+    const ok = await copyText(link);
+    if (ok) {
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
-    } catch { toast.error('Kopyalanamadı'); }
+    } else {
+      toast.error("Kopyalanamadı — linki uzun basıp seçip kopyalayabilirsin");
+    }
   };
 
   return (
@@ -297,11 +300,13 @@ function QrModal({ player, lanUrl, onClose }) {
   }, [onClose]);
 
   const copy = async () => {
-    try {
-      await navigator.clipboard.writeText(link);
+    const ok = await copyText(link);
+    if (ok) {
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
-    } catch { toast.error('Kopyalanamadı'); }
+    } else {
+      toast.error("Kopyalanamadı — linki uzun basıp seçip kopyalayabilirsin");
+    }
   };
 
   return (
