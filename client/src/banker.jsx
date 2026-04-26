@@ -13,7 +13,7 @@ import { copyText } from './clipboard.js';
 import {
   QrCode as QrIcon, Dices, Plus, Minus, RotateCcw, MoreVertical, Trash2, Copy, Check, Pencil,
   Settings, UserPlus, Users, PlayCircle,
-  Receipt, ArrowLeftRight, ArrowDownToLine, ArrowUpFromLine, Flag, Undo2,
+  Receipt, ArrowLeftRight, ArrowDownToLine, ArrowUpFromLine, Flag, Undo2, Clock,
 } from 'lucide-react';
 import '../index.css';
 
@@ -85,6 +85,9 @@ function Header({ connected, lanUrl, socket, state }) {
       </h1>
       <div className="flex items-center gap-2 flex-wrap">
         <code className="text-xs opacity-70 bg-base-300 px-2 py-1 rounded hidden sm:inline">{lanUrl}</code>
+        {state.status === 'active' && state.startedAt && (
+          <GameTimer startedAt={state.startedAt} />
+        )}
         <ConnectionBadge connected={connected} />
         <ThemeToggle />
         {state.status === 'active' && (
@@ -102,6 +105,32 @@ function Header({ connected, lanUrl, socket, state }) {
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+function GameTimer({ startedAt }) {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  const totalSec = Math.max(0, Math.floor((now - startedAt) / 1000));
+  const hh = Math.floor(totalSec / 3600);
+  const mm = Math.floor((totalSec % 3600) / 60);
+  const ss = totalSec % 60;
+  const text = hh > 0
+    ? `${hh}:${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}`
+    : `${mm}:${String(ss).padStart(2, '0')}`;
+
+  return (
+    <div
+      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-base-300/60 text-xs font-medium balance-display"
+      title="Oyun süresi"
+    >
+      <Clock size={14} className="opacity-80" />
+      <span>{text}</span>
     </div>
   );
 }

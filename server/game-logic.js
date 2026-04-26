@@ -40,7 +40,7 @@ export function startGame(state) {
     id: id('t'), ts, type: 'initial', to: p.id,
     amount: state.config.startingBalance, undone: false,
   }));
-  return { ...state, status: 'active', players, transactions };
+  return { ...state, status: 'active', startedAt: ts, players, transactions };
 }
 
 function findPlayer(state, playerId) {
