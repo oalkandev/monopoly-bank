@@ -47,7 +47,7 @@ function App() {
   return (
     <div className="min-h-screen p-4 max-w-md mx-auto">
       <Toaster position="top-center" toastOptions={{ duration: 2000 }} />
-      <TopBar connected={connected} sound={sound} />
+      <TopBar connected={connected} sound={sound} socket={socket} state={state} />
       {state.status === 'setup'
         ? <WaitingView me={me} />
         : <PlayingView socket={socket} state={state} me={me} sound={sound} />}
@@ -60,13 +60,36 @@ function App() {
   );
 }
 
-function TopBar({ connected, sound }) {
+function TopBar({ connected, sound, socket, state }) {
+  const [rolling, setRolling] = useState(false);
+  const canRoll = state?.status === 'active';
+
+  const rollDice = async () => {
+    if (rolling || !socket) return;
+    setRolling(true);
+    try { await emit(socket, 'roll-dice'); }
+    catch (e) { toast.error(e.message); }
+    setTimeout(() => setRolling(false), 600);
+  };
+
   return (
     <div className="navbar bg-base-200 rounded-box mb-4 min-h-0 py-1 px-3">
       <div className="flex-1">
         <ConnectionBadge connected={connected} size="sm" />
       </div>
       <div className="flex-none gap-1">
+        {canRoll && (
+          <button
+            onClick={rollDice}
+            disabled={rolling}
+            className="btn btn-secondary btn-sm gap-1"
+            aria-label="Zar at"
+            title="Zar at"
+          >
+            <Dices size={18} className={rolling ? 'animate-spin' : ''} />
+            Zar At
+          </button>
+        )}
         <button
           onClick={sound.toggle}
           className="btn btn-ghost btn-circle btn-sm"
@@ -117,18 +140,9 @@ function PlayingView({ socket, state, me, sound }) {
   const otherPlayers = state.players.filter(p => p.id !== me.id);
   const [showSend, setShowSend] = useState(false);
   const [showBank, setShowBank] = useState(false);
-  const [rolling, setRolling] = useState(false);
   const receivedTx = useReceivedNotification(state, me);
 
   useReceiveSound(me.balance, sound.enabled);
-
-  const rollDice = async () => {
-    if (rolling) return;
-    setRolling(true);
-    try { await emit(socket, 'roll-dice'); }
-    catch (e) { toast.error(e.message); }
-    setTimeout(() => setRolling(false), 600);
-  };
 
   return (
     <>
@@ -146,24 +160,16 @@ function PlayingView({ socket, state, me, sound }) {
           <div className="balance-display text-6xl font-black my-2 text-primary">
             {fmt(me.balance, cur)}
           </div>
-          <button
-            className="btn btn-secondary btn-lg btn-block gap-2"
-            onClick={rollDice}
-            disabled={rolling}
-          >
-            <Dices size={22} className={rolling ? 'animate-spin' : ''} />
-            {rolling ? 'Atılıyor…' : 'Zar At'}
-          </button>
           <div className="grid grid-cols-2 gap-2 w-full">
             <button
-              className="btn btn-primary gap-2"
+              className="btn btn-primary btn-lg gap-2"
               onClick={() => setShowSend(true)}
               disabled={otherPlayers.length === 0}
             >
               <Send size={18} />
               Para Gönder
             </button>
-            <button className="btn btn-accent gap-2" onClick={() => setShowBank(true)}>
+            <button className="btn btn-accent btn-lg gap-2" onClick={() => setShowBank(true)}>
               <Building2 size={18} />
               Bankaya Öde
             </button>
