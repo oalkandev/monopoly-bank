@@ -15,8 +15,15 @@ export function createSocket({ role } = {}) {
 export function emit(socket, event, payload) {
   return new Promise((resolve, reject) => {
     socket.emit(event, payload, (ack) => {
-      if (ack?.ok) resolve(ack);
-      else reject(new Error(ack?.error ?? i18n.t('errors.unknownError')));
+      if (ack?.ok) {
+        resolve(ack);
+      } else {
+        // Sunucu hata mesajını ya bir i18n key (ör. "errors.insufficientBalance")
+        // ya da olduğu gibi bir metin gönderir. t() key'i çevirir, key değilse aynısını döndürür.
+        const raw = ack?.error ?? 'errors.unknownError';
+        const translated = i18n.t(raw);
+        reject(new Error(translated));
+      }
     });
   });
 }

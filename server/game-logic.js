@@ -22,8 +22,8 @@ export function createInitialState() {
 }
 
 export function addPlayer(state, { name, color }) {
-  if (state.status !== 'setup') throw new Error('Oyun başladıktan sonra oyuncu eklenemez');
-  if (!name?.trim()) throw new Error('İsim boş olamaz');
+  if (state.status !== 'setup') throw new Error('errors.playerAfterStart');
+  if (!name?.trim()) throw new Error('errors.nameEmpty');
   return {
     ...state,
     players: [...state.players, {
@@ -34,13 +34,13 @@ export function addPlayer(state, { name, color }) {
 }
 
 export function removePlayer(state, { playerId }) {
-  if (state.status !== 'setup') throw new Error('Oyun başladıktan sonra oyuncu silinemez');
+  if (state.status !== 'setup') throw new Error('errors.removePlayerAfterStart');
   return { ...state, players: state.players.filter(p => p.id !== playerId) };
 }
 
 export function startGame(state) {
-  if (state.status !== 'setup') throw new Error('Oyun zaten başladı');
-  if (state.players.length < 2) throw new Error('En az 2 oyuncu gerekli');
+  if (state.status !== 'setup') throw new Error('errors.gameAlreadyStarted');
+  if (state.players.length < 2) throw new Error('errors.minTwoPlayers');
   const ts = Date.now();
   const players = state.players.map(p => ({ ...p, balance: state.config.startingBalance }));
   const transactions = state.players.map(p => ({
@@ -52,7 +52,7 @@ export function startGame(state) {
 
 function findPlayer(state, playerId) {
   const p = state.players.find(p => p.id === playerId);
-  if (!p) throw new Error(`Oyuncu bulunamadı: ${playerId}`);
+  if (!p) throw new Error('errors.playerNotFound');
   return p;
 }
 
@@ -73,11 +73,11 @@ function appendTx(state, tx) {
 }
 
 export function applyTransfer(state, { fromId, toId, amount }) {
-  if (!Number.isFinite(amount) || amount <= 0) throw new Error('Geçersiz miktar');
-  if (fromId === toId) throw new Error('Aynı kişiye gönderim yapılamaz');
+  if (!Number.isFinite(amount) || amount <= 0) throw new Error('errors.invalidAmount');
+  if (fromId === toId) throw new Error('errors.transferSelf');
   const from = findPlayer(state, fromId);
   findPlayer(state, toId);
-  if (from.balance < amount) throw new Error('Yetersiz bakiye');
+  if (from.balance < amount) throw new Error('errors.insufficientBalance');
   let s = updateBalance(state, fromId, -amount);
   s = updateBalance(s, toId, amount);
   return appendTx(s, { type: 'transfer', from: fromId, to: toId, amount });
@@ -91,9 +91,9 @@ export function applyPassGo(state, { playerId }) {
 }
 
 export function applyBankerAdjust(state, { playerId, amount }) {
-  if (!Number.isFinite(amount) || amount === 0) throw new Error('Geçersiz miktar');
+  if (!Number.isFinite(amount) || amount === 0) throw new Error('errors.invalidAmount');
   const p = findPlayer(state, playerId);
-  if (amount < 0 && p.balance + amount < 0) throw new Error('Yetersiz bakiye');
+  if (amount < 0 && p.balance + amount < 0) throw new Error('errors.insufficientBalance');
   const s = updateBalance(state, playerId, amount);
   return appendTx(s, amount > 0
     ? { type: 'banker-credit', to: playerId, amount }
@@ -102,8 +102,8 @@ export function applyBankerAdjust(state, { playerId, amount }) {
 
 export function undoTransaction(state, { transactionId }) {
   const tx = state.transactions.find(t => t.id === transactionId);
-  if (!tx) throw new Error(`İşlem bulunamadı: ${transactionId}`);
-  if (tx.undone) throw new Error('Bu işlem zaten geri alındı');
+  if (!tx) throw new Error('errors.txNotFound');
+  if (tx.undone) throw new Error('errors.alreadyUndone');
   let s = state;
   switch (tx.type) {
     case 'transfer':
@@ -119,7 +119,7 @@ export function undoTransaction(state, { transactionId }) {
       s = updateBalance(s, tx.from, tx.amount);
       break;
     default:
-      throw new Error(`Bilinmeyen işlem tipi: ${tx.type}`);
+      throw new Error('errors.unknownError');
   }
   return {
     ...s,

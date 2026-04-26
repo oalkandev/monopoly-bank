@@ -61,7 +61,7 @@ export async function updateConfig(patch) {
 
 export async function payToBank(payload) {
   const { playerId, amount } = payload;
-  if (!Number.isFinite(amount) || amount <= 0) throw new Error('Geçersiz miktar');
+  if (!Number.isFinite(amount) || amount <= 0) throw new Error('errors.invalidAmount');
   await commit(logic.applyBankerAdjust(state, { playerId, amount: -amount }));
 }
 
