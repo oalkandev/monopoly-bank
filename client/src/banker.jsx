@@ -146,7 +146,7 @@ function SetupView({ socket, state, lanUrl }) {
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
       <div className="lg:col-span-1 space-y-4">
         <div className="card bg-base-200 shadow-md">
-          <div className="card-body">
+          <div className="card-body gap-4">
             <h2 className="card-title text-base gap-2"><Settings size={18} /> Ayarlar</h2>
             <label className="form-control">
               <div className="label py-1"><span className="label-text">Başlangıç Parası</span></div>
