@@ -164,18 +164,18 @@ function PlayingView({ socket, state, me, sound }) {
           <div className="balance-display text-6xl font-black my-2 text-primary">
             {fmt(me.balance, cur)}
           </div>
-          <div className="grid grid-cols-2 gap-2 w-full">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full">
             <button
-              className="btn btn-primary btn-lg gap-2"
+              className="btn btn-primary btn-lg whitespace-nowrap"
               onClick={() => setShowSend(true)}
               disabled={otherPlayers.length === 0}
             >
-              <Send size={18} />
-              Para Gönder
+              <Send size={20} className="shrink-0" />
+              <span>Para Gönder</span>
             </button>
-            <button className="btn btn-accent btn-lg gap-2" onClick={() => setShowBank(true)}>
-              <Building2 size={18} />
-              Bankaya Öde
+            <button className="btn btn-accent btn-lg whitespace-nowrap" onClick={() => setShowBank(true)}>
+              <Building2 size={20} className="shrink-0" />
+              <span>Bankaya Öde</span>
             </button>
           </div>
         </div>
