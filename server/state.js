@@ -27,6 +27,12 @@ export async function addPlayer(payload) {
   await commit(logic.addPlayer(state, payload));
 }
 
+export async function addDiceRoll(roll) {
+  const existing = state.diceRolls ?? [];
+  const next = [...existing, roll].slice(-50);
+  await commit({ ...state, diceRolls: next });
+}
+
 export async function removePlayer(payload) {
   await commit(logic.removePlayer(state, payload));
 }

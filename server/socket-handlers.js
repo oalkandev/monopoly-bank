@@ -30,11 +30,17 @@ export function attachSockets(io) {
 
     socket.on('roll-dice', wrap(async () => {
       if (!playerId) throw new Error('Sadece oyuncular zar atabilir');
-      const dice = [
-        1 + Math.floor(Math.random() * 6),
-        1 + Math.floor(Math.random() * 6),
-      ];
-      io.emit('dice-rolled', { playerId, dice, ts: Date.now() });
+      const roll = {
+        id: 'd_' + Math.random().toString(36).slice(2, 10),
+        playerId,
+        dice: [
+          1 + Math.floor(Math.random() * 6),
+          1 + Math.floor(Math.random() * 6),
+        ],
+        ts: Date.now(),
+      };
+      await state.addDiceRoll(roll);
+      io.emit('dice-rolled', roll);
     }));
 
     socket.on('add-player', wrap(state.addPlayer));

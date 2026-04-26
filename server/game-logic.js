@@ -10,6 +10,7 @@ export function createInitialState() {
     config: { currency: '₺', startingBalance: 1500, passGoBonus: 200 },
     players: [],
     transactions: [],
+    diceRolls: [],
   };
 }
 

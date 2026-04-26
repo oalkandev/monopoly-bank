@@ -8,6 +8,7 @@ import { ThemeToggle } from './ThemeToggle.jsx';
 import { useTheme } from './useTheme.js';
 import { ConnectionBadge } from './ConnectionBadge.jsx';
 import { DiceNotification } from './DiceNotification.jsx';
+import { DiceHistory } from './DiceHistory.jsx';
 import { copyText } from './clipboard.js';
 import {
   QrCode as QrIcon, Dices, Plus, Minus, RotateCcw, MoreVertical, Trash2, Copy, Check, Pencil,
@@ -281,6 +282,7 @@ function ActiveView({ socket, state, lanUrl }) {
         </div>
         <div className="lg:col-span-1">
           <TransactionFeed socket={socket} state={state} />
+          <DiceHistory state={state} limit={5} />
         </div>
       </div>
       {qrPlayer && (
@@ -509,7 +511,7 @@ function TransactionFeed({ socket, state }) {
   const txs = allTxs.filter(t => matchFilter(t, filter));
 
   return (
-    <div className="card bg-base-200 shadow-md sticky top-4">
+    <div className="card bg-base-200 shadow-md mb-4">
       <div className="card-body p-4">
         <div className="flex items-center justify-between">
           <h2 className="card-title text-base">📜 İşlem Geçmişi</h2>

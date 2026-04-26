@@ -9,6 +9,7 @@ import { useTheme } from './useTheme.js';
 import { useSoundSetting, useReceiveSound } from './useReceiveSound.js';
 import { ConnectionBadge } from './ConnectionBadge.jsx';
 import { DiceNotification } from './DiceNotification.jsx';
+import { DiceHistory } from './DiceHistory.jsx';
 import { Send, Building2, Dices, Bell, BellOff } from 'lucide-react';
 import '../index.css';
 
@@ -179,6 +180,7 @@ function PlayingView({ socket, state, me, sound }) {
 
       <PlayerList state={state} me={me} />
       <TransactionFeed state={state} me={me} />
+      <DiceHistory state={state} limit={5} />
 
       <SendModal
         open={showSend}
