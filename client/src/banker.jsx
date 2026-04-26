@@ -563,7 +563,7 @@ function BankerPlayerCard({ socket, player, state, onShowQr }) {
           ))}
         </div>
         <button className="btn btn-outline btn-warning btn-block btn-sm h-10 min-h-0 gap-2" onClick={passGo}>
-          <Dices size={18} /> {t('banker.goBonusButton', { amount: '+' + fmt(state.config.passGoBonus, cur) })}
+          <Dices size={18} /> {t('banker.goBonusButton', { amount: fmt(state.config.passGoBonus, cur) })}
         </button>
       </div>
     </div>
