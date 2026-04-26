@@ -1,6 +1,8 @@
 import { Wifi, WifiOff } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export function ConnectionBadge({ connected, size = 'sm' }) {
+  const { t } = useTranslation();
   const labelSize = size === 'sm' ? 'text-xs' : 'text-sm';
   const iconSize = size === 'sm' ? 14 : 16;
   const dotClass = connected ? 'bg-success' : 'bg-error';
@@ -17,7 +19,7 @@ export function ConnectionBadge({ connected, size = 'sm' }) {
       {connected
         ? <Wifi size={iconSize} className="opacity-80" />
         : <WifiOff size={iconSize} className="opacity-80" />}
-      <span className="opacity-90">{connected ? 'Bağlı' : 'Bağlantı yok'}</span>
+      <span className="opacity-90">{connected ? t('common.connected') : t('common.disconnected')}</span>
     </div>
   );
 }

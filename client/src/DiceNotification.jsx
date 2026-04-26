@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Dices } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 const DOT_PATTERNS = {
   1: [[30, 30]],
@@ -52,6 +53,8 @@ function AnimatedDie({ finalValue, rollKey, dotColor }) {
 }
 
 export function DiceNotification({ roll, players, onClose }) {
+  const { t } = useTranslation();
+
   useEffect(() => {
     if (!roll) return;
     const id = setTimeout(onClose, 4000);
@@ -77,10 +80,10 @@ export function DiceNotification({ roll, players, onClose }) {
       >
         <div className="flex items-center justify-center gap-2 text-white/90 text-sm font-bold uppercase tracking-wider mb-2">
           <Dices size={20} />
-          <span>Zar Atıldı</span>
+          <span>{t('dice.rolledTitle')}</span>
         </div>
         <div className="text-2xl font-black text-white mb-4 drop-shadow">
-          {player?.name ?? 'Bilinmeyen'}
+          {player?.name ?? '?'}
         </div>
         <div className="flex items-center justify-center gap-4 my-4">
           <AnimatedDie finalValue={roll.dice[0]} rollKey={`${roll.key ?? roll.ts}-a`} dotColor={color} />
@@ -88,17 +91,17 @@ export function DiceNotification({ roll, players, onClose }) {
           <AnimatedDie finalValue={roll.dice[1]} rollKey={`${roll.key ?? roll.ts}-b`} dotColor={color} />
         </div>
         <div className="mt-4 text-white">
-          <div className="text-xs uppercase tracking-wider opacity-75 font-bold">Toplam</div>
+          <div className="text-xs uppercase tracking-wider opacity-75 font-bold">{t('dice.total')}</div>
           <div className="balance-display text-6xl font-black drop-shadow leading-none mt-1">
             {total}
           </div>
           {isDouble && (
             <div className="mt-3 inline-block px-3 py-1 bg-white/20 rounded-full text-sm font-bold">
-              🎉 Çift! Bir kez daha at
+              {t('dice.double')}
             </div>
           )}
         </div>
-        <div className="mt-5 text-xs text-white/60">kapatmak için dokun</div>
+        <div className="mt-5 text-xs text-white/60">{t('dice.tapToClose')}</div>
       </div>
     </div>
   );

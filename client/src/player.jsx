@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import toast, { Toaster } from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
+import './i18n.js';
 import { useSocket } from './useSocket.js';
 import { useWakeLock } from './useWakeLock.js';
 import { emit, describeTx, txDirection, formatRelative, getQuickAmounts } from './socket.js';
@@ -11,6 +13,7 @@ import { ConnectionBadge } from './ConnectionBadge.jsx';
 import { DiceNotification } from './DiceNotification.jsx';
 import { DiceList } from './DiceHistory.jsx';
 import { GameTimer } from './GameTimer.jsx';
+import { LanguageSwitcher } from './LanguageSwitcher.jsx';
 import {
   Send, Building2, Dices, Bell, BellOff, Users,
   Receipt, ArrowLeftRight, ArrowDownToLine, ArrowUpFromLine, Flag, Building,
@@ -22,7 +25,7 @@ function getCookie(name) {
 }
 
 function fmt(n, currency) {
-  return `${n.toLocaleString('tr-TR')}${currency}`;
+  return `${n.toLocaleString()}${currency}`;
 }
 
 function App() {
@@ -67,6 +70,7 @@ function App() {
 }
 
 function TopBar({ connected, sound, state }) {
+  const { t } = useTranslation();
   const startedAt = state?.startedAt ?? state?.transactions?.[0]?.ts;
   const isActive = state?.status === 'active';
   return (
@@ -79,11 +83,12 @@ function TopBar({ connected, sound, state }) {
         <button
           onClick={sound.toggle}
           className="btn btn-ghost btn-circle btn-sm"
-          title={sound.enabled ? 'Sesi kapat' : 'Sesi aç'}
-          aria-label={sound.enabled ? 'Sesi kapat' : 'Sesi aç'}
+          title={sound.enabled ? t('common.soundOn') : t('common.soundOff')}
+          aria-label={sound.enabled ? t('common.soundOn') : t('common.soundOff')}
         >
           {sound.enabled ? <Bell size={18} /> : <BellOff size={18} />}
         </button>
+        <LanguageSwitcher size="sm" />
         <ThemeToggle size="sm" />
       </div>
     </div>
@@ -91,6 +96,7 @@ function TopBar({ connected, sound, state }) {
 }
 
 function DiceFab({ socket }) {
+  const { t } = useTranslation();
   const [rolling, setRolling] = useState(false);
   const rollDice = async () => {
     if (rolling) return;
@@ -104,8 +110,8 @@ function DiceFab({ socket }) {
       onClick={rollDice}
       disabled={rolling}
       className="btn btn-secondary btn-circle btn-lg fixed bottom-6 right-6 shadow-2xl z-40 w-16 h-16"
-      aria-label="Zar at"
-      title="Zar at"
+      aria-label={t('player.rollDice')}
+      title={t('player.rollDice')}
     >
       <Dices size={32} className={rolling ? 'animate-spin' : ''} />
     </button>
@@ -113,13 +119,14 @@ function DiceFab({ socket }) {
 }
 
 function NoToken() {
+  const { t } = useTranslation();
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
       <div className="card bg-base-200 shadow-xl max-w-md">
         <div className="card-body text-center">
           <div className="text-5xl mb-2">📱</div>
-          <h2 className="card-title justify-center">Henüz katılmadın</h2>
-          <p className="opacity-70">Bankacının QR kodunu telefon kameranla tara veya verdiği linke tıkla.</p>
+          <h2 className="card-title justify-center">{t('player.notJoinedTitle')}</h2>
+          <p className="opacity-70">{t('player.notJoinedHint')}</p>
         </div>
       </div>
     </div>
@@ -127,6 +134,7 @@ function NoToken() {
 }
 
 function WaitingView({ me }) {
+  const { t } = useTranslation();
   return (
     <div className="min-h-[80vh] flex items-center justify-center">
       <div className="card bg-base-200 shadow-xl">
@@ -134,8 +142,8 @@ function WaitingView({ me }) {
           <div className="badge badge-lg text-white font-bold mx-auto" style={{ backgroundColor: me.color }}>
             {me.name}
           </div>
-          <h2 className="card-title justify-center mt-4">⏳ Oyun başlamayı bekliyor</h2>
-          <p className="opacity-70">Bankacı oyunu başlattığında buradan oynamaya başlayabilirsin.</p>
+          <h2 className="card-title justify-center mt-4">⏳ {t('player.waitingTitle')}</h2>
+          <p className="opacity-70">{t('player.waitingHint')}</p>
           <span className="loading loading-dots loading-md mx-auto mt-2"></span>
         </div>
       </div>
@@ -144,6 +152,7 @@ function WaitingView({ me }) {
 }
 
 function PlayingView({ socket, state, me, sound }) {
+  const { t } = useTranslation();
   const cur = state.config.currency;
   const otherPlayers = state.players.filter(p => p.id !== me.id);
   const [showSend, setShowSend] = useState(false);
@@ -175,11 +184,11 @@ function PlayingView({ socket, state, me, sound }) {
               disabled={otherPlayers.length === 0}
             >
               <Send size={18} className="shrink-0" />
-              <span>Para Gönder</span>
+              <span>{t('player.sendMoney')}</span>
             </button>
             <button className="btn btn-accent whitespace-nowrap" onClick={() => setShowBank(true)}>
               <Building2 size={18} className="shrink-0" />
-              <span>Bankaya Öde</span>
+              <span>{t('player.payToBank')}</span>
             </button>
           </div>
         </div>
@@ -222,7 +231,6 @@ function useReceivedNotification(state, me) {
     if (!state || !me) return;
     const txs = state.transactions;
 
-    // İlk yüklemede mevcut son işlemi "görüldü" say, modal açma
     if (seenRef.current === null) {
       seenRef.current = txs.length > 0 ? txs[txs.length - 1].id : '__none__';
       return;
@@ -255,16 +263,17 @@ function useReceivedNotification(state, me) {
 }
 
 function ReceiveNotification({ tx, state, onClose }) {
+  const { t } = useTranslation();
   const cur = state.config.currency;
   const sender = state.players.find(p => p.id === tx.from);
-  const senderName = sender?.name ?? 'Banka';
-  const color = sender?.color ?? '#475569'; // bank gray
+  const senderName = sender?.name ?? t('common.bank');
+  const color = sender?.color ?? '#475569';
 
   const label = tx.type === 'pass-go'
-    ? '🎲 GO Bonusu'
+    ? t('receive.passGoBonus')
     : tx.type === 'banker-credit'
-      ? '🏦 Bankadan Para'
-      : '💸 Para Geldi';
+      ? t('receive.fromBank')
+      : t('receive.moneyArrived');
 
   return (
     <div
@@ -276,24 +285,24 @@ function ReceiveNotification({ tx, state, onClose }) {
         <div className="text-2xl opacity-90 font-semibold mb-3 drop-shadow">{label}</div>
         <div className="text-5xl font-black mb-6 drop-shadow tracking-tight">{senderName}</div>
         <div className="text-7xl font-black drop-shadow balance-display">
-          +{tx.amount.toLocaleString('tr-TR')}{cur}
+          +{tx.amount.toLocaleString()}{cur}
         </div>
-        <div className="mt-10 text-sm opacity-70">kapatmak için dokun</div>
+        <div className="mt-10 text-sm opacity-70">{t('receive.tapToClose')}</div>
       </div>
-      {/* progress bar */}
       <div className="absolute bottom-0 left-0 h-1 bg-white/40 receive-progress" />
     </div>
   );
 }
 
 function PlayerList({ state, me }) {
+  const { t } = useTranslation();
   const cur = state.config.currency;
   const others = state.players.filter(p => p.id !== me.id);
   if (others.length === 0) return null;
   return (
     <div className="card bg-base-200 shadow-md mb-4">
       <div className="card-body p-4">
-        <h3 className="font-bold text-sm opacity-70 uppercase tracking-wide mb-2">Diğer oyuncular</h3>
+        <h3 className="font-bold text-sm opacity-70 uppercase tracking-wide mb-2">{t('player.otherPlayers')}</h3>
         <div className="space-y-1.5">
           {others.map(p => (
             <div
@@ -325,7 +334,8 @@ const TX_META = {
 };
 
 function HistoryCard({ state, me }) {
-  const [tab, setTab] = useState('tx'); // 'tx' | 'dice'
+  const { t } = useTranslation();
+  const [tab, setTab] = useState('tx');
   const txCount = state.transactions.length;
   const diceCount = state.diceRolls?.length ?? 0;
 
@@ -339,7 +349,7 @@ function HistoryCard({ state, me }) {
             className={`tab gap-2 flex-1 ${tab === 'tx' ? 'tab-active' : ''}`}
             onClick={() => setTab('tx')}
           >
-            <Receipt size={16} /> İşlemler
+            <Receipt size={16} /> {t('history.transactions')}
             <span className="badge badge-ghost badge-xs">{txCount}</span>
           </button>
           <button
@@ -348,7 +358,7 @@ function HistoryCard({ state, me }) {
             className={`tab gap-2 flex-1 ${tab === 'dice' ? 'tab-active' : ''}`}
             onClick={() => setTab('dice')}
           >
-            <Dices size={16} /> Zarlar
+            <Dices size={16} /> {t('history.dice')}
             <span className="badge badge-ghost badge-xs">{diceCount}</span>
           </button>
         </div>
@@ -360,14 +370,15 @@ function HistoryCard({ state, me }) {
 }
 
 function TxList({ state, me }) {
+  const { t } = useTranslation();
   const cur = state.config.currency;
   const [filter, setFilter] = useState('all');
   const allTxs = [...state.transactions].slice(-100).reverse();
 
-  const filterFn = (t) => {
+  const filterFn = (tx) => {
     if (filter === 'all') return true;
-    if (filter === 'me') return t.from === me.id || t.to === me.id;
-    if (filter === 'bank') return !t.from || !t.to;
+    if (filter === 'me') return tx.from === me.id || tx.to === me.id;
+    if (filter === 'bank') return !tx.from || !tx.to;
     return true;
   };
   const txs = allTxs.filter(filterFn);
@@ -380,62 +391,63 @@ function TxList({ state, me }) {
           role="tab"
           className={`tab ${filter === 'all' ? 'tab-active' : ''}`}
           onClick={() => setFilter('all')}
-        >Tümü</button>
+        >{t('common.all')}</button>
         <button
           type="button"
           role="tab"
           className={`tab gap-1 ${filter === 'me' ? 'tab-active' : ''}`}
           onClick={() => setFilter('me')}
           style={filter === 'me' ? { backgroundColor: me.color, color: 'white' } : undefined}
-        >Ben</button>
+        >{t('common.you')}</button>
         <button
           type="button"
           role="tab"
           className={`tab gap-1 ${filter === 'bank' ? 'tab-active' : ''}`}
           onClick={() => setFilter('bank')}
-        ><Building size={14} /> Banka</button>
+        ><Building size={14} /> {t('common.bank')}</button>
       </div>
 
       {allTxs.length === 0 ? (
         <div className="text-center py-6 opacity-50 text-sm">
           <div className="text-3xl">📭</div>
-          <p>Henüz işlem yok</p>
+          <p>{t('history.noTransactions')}</p>
         </div>
       ) : txs.length === 0 ? (
         <div className="text-center py-6 opacity-50 text-sm">
           <div className="text-3xl">🔍</div>
-          <p>Bu filtreye uyan işlem yok</p>
+          <p>{t('history.noFilteredTransactions')}</p>
         </div>
       ) : (
         <ul className="space-y-1 max-h-80 overflow-y-auto mt-3">
-          {txs.map(t => {
-            const dir = txDirection(t, me.id);
-            const meta = TX_META[t.type] ?? { Icon: ArrowLeftRight, color: 'opacity-60' };
+          {txs.map(tx => {
+            const dir = txDirection(tx, me.id);
+            const meta = TX_META[tx.type] ?? { Icon: ArrowLeftRight, color: 'opacity-60' };
             const Icon = meta.Icon;
             const sign = dir === 'in' ? '+' : dir === 'out' ? '−' : '';
-            const amountClass = t.undone
+            const amountClass = tx.undone
               ? 'opacity-40 line-through'
               : dir === 'in' ? 'text-success font-bold'
               : dir === 'out' ? 'text-error font-bold'
               : '';
             return (
-              <li key={t.id} className={`flex items-center gap-2 py-1 px-2 rounded hover:bg-base-300/30 ${t.undone ? 'opacity-50' : ''}`}>
+              <li key={tx.id} className={`flex items-center gap-2 py-1 px-2 rounded hover:bg-base-300/30 ${tx.undone ? 'opacity-50' : ''}`}>
                 <span className={meta.color}><Icon size={16} /></span>
-                <span className="flex-1 text-sm truncate">{describeTx(t, state.players)}</span>
+                <span className="flex-1 text-sm truncate">{describeTx(tx, state.players)}</span>
                 <span className={`balance-display ${amountClass}`}>
-                  {sign}{fmt(t.amount, cur)}
+                  {sign}{fmt(tx.amount, cur)}
                 </span>
-                <span className="text-xs opacity-50 w-14 text-right">{formatRelative(t.ts)}</span>
+                <span className="text-xs opacity-50 w-14 text-right">{formatRelative(tx.ts)}</span>
               </li>
             );
           })}
-          </ul>
-        )}
+        </ul>
+      )}
     </>
   );
 }
 
 function SendModal({ open, socket, state, me, others, onClose }) {
+  const { t } = useTranslation();
   const cur = state.config.currency;
   const [toId, setToId] = useState('');
   const [amount, setAmount] = useState('');
@@ -465,40 +477,44 @@ function SendModal({ open, socket, state, me, others, onClose }) {
         for (const p of others) {
           await emit(socket, 'transfer', { toId: p.id, amount: numAmount });
         }
-        toast.success(`${others.length} oyuncuya ${fmt(numAmount, cur)} gönderildi (toplam ${fmt(totalCost, cur)})`);
+        toast.success(t('player.sendModal.sentAll', {
+          count: others.length,
+          amount: fmt(numAmount, cur),
+          total: fmt(totalCost, cur),
+        }));
       } else {
         await emit(socket, 'transfer', { toId, amount: numAmount });
-        toast.success(`${recipient.name}'e ${fmt(numAmount, cur)} gönderildi`);
+        toast.success(t('player.sendModal.sentSingle', {
+          name: recipient.name,
+          amount: fmt(numAmount, cur),
+        }));
       }
       onClose();
     } catch (e) { toast.error(e.message); } finally { setBusy(false); }
   };
 
   return (
-    <Modal open={open} onClose={onClose} title="💸 Para Gönder" headerColor={me.color}>
-      {/* Bakiye chip */}
+    <Modal open={open} onClose={onClose} title={`💸 ${t('player.sendModal.title')}`} headerColor={me.color}>
       <div className="flex items-center justify-between bg-base-300 rounded-lg px-3 py-2 mb-3">
-        <span className="text-xs opacity-70 uppercase tracking-wide">Bakiye</span>
+        <span className="text-xs opacity-70 uppercase tracking-wide">{t('common.balance')}</span>
         <span className="font-bold balance-display text-lg">{fmt(me.balance, cur)}</span>
       </div>
 
-      {/* Alıcı */}
       <div className="form-control w-full">
         <div className="label py-1">
-          <span className="label-text font-semibold">Alıcı</span>
+          <span className="label-text font-semibold">{t('player.sendModal.recipient')}</span>
           {isAll && (
             <span className="label-text-alt text-xs text-secondary">
-              ✓ Tüm oyuncular ({others.length})
+              {t('player.sendModal.allSelected', { count: others.length })}
             </span>
           )}
           {recipient && (
             <span className="label-text-alt text-xs" style={{ color: recipient.color }}>
-              ✓ {recipient.name} seçildi
+              {t('player.sendModal.selected', { name: recipient.name })}
             </span>
           )}
         </div>
 
-        {/* Herkese gönder kartı */}
         <button
           type="button"
           onClick={() => setToId('__all__')}
@@ -506,8 +522,8 @@ function SendModal({ open, socket, state, me, others, onClose }) {
         >
           <Users size={22} className="shrink-0" />
           <div className="flex-1 min-w-0">
-            <div className="font-bold">Herkese Gönder</div>
-            <div className="text-xs opacity-80">Her oyuncuya aynı miktar ({others.length} oyuncu)</div>
+            <div className="font-bold">{t('player.sendModal.sendToAll')}</div>
+            <div className="text-xs opacity-80">{t('player.sendModal.sendToAllSubtitle', { count: others.length })}</div>
           </div>
         </button>
 
@@ -547,11 +563,10 @@ function SendModal({ open, socket, state, me, others, onClose }) {
         </div>
       </div>
 
-      {/* Miktar */}
       <div className="form-control w-full mt-3">
         <div className="label py-1">
           <span className="label-text font-semibold">
-            {isAll ? 'Kişi başı miktar' : 'Miktar'}
+            {isAll ? t('player.sendModal.amountPerPerson') : t('player.sendModal.amount')}
           </span>
           <button
             type="button"
@@ -563,7 +578,7 @@ function SendModal({ open, socket, state, me, others, onClose }) {
               setAmount(String(max));
             }}
           >
-            Tümü
+            {t('player.sendModal.all')}
           </button>
         </div>
         <label className={`input input-bordered flex items-center gap-2 h-16 ${exceeds ? 'input-error' : ''}`}>
@@ -582,31 +597,30 @@ function SendModal({ open, socket, state, me, others, onClose }) {
         <div className="label py-1">
           <span className="label-text-alt">
             {exceeds ? (
-              <span className="text-error font-semibold">⚠ Yetersiz bakiye</span>
+              <span className="text-error font-semibold">{t('player.sendModal.insufficient')}</span>
             ) : numAmount > 0 ? (
               <span className="opacity-70">
                 {isAll && (
                   <>
-                    Toplam: <span className="font-semibold balance-display">{fmt(totalCost, cur)}</span>
+                    {t('common.total')}: <span className="font-semibold balance-display">{fmt(totalCost, cur)}</span>
                     {' • '}
                   </>
                 )}
-                Kalan: <span className="font-semibold balance-display">{fmt(remaining, cur)}</span>
+                {t('common.remaining')}: <span className="font-semibold balance-display">{fmt(remaining, cur)}</span>
               </span>
             ) : (
-              <span className="opacity-50">Hızlı seç ↓</span>
+              <span className="opacity-50">{t('player.sendModal.quickPick')}</span>
             )}
           </span>
         </div>
       </div>
 
-      {/* Quick amounts (additive) */}
       <div className="mt-5">
         <div className="flex items-center justify-between mb-2">
-          <div className="text-xs opacity-60 uppercase tracking-wide">Hızlı ekle</div>
+          <div className="text-xs opacity-60 uppercase tracking-wide">{t('player.sendModal.quickAdd')}</div>
           {numAmount > 0 && (
             <button type="button" className="text-xs link link-error" onClick={() => setAmount('')}>
-              Sıfırla
+              {t('common.reset')}
             </button>
           )}
         </div>
@@ -632,7 +646,6 @@ function SendModal({ open, socket, state, me, others, onClose }) {
         </div>
       </div>
 
-      {/* Aksiyon */}
       <button
         className="btn btn-primary btn-lg w-full mt-5"
         onClick={send}
@@ -641,15 +654,15 @@ function SendModal({ open, socket, state, me, others, onClose }) {
         {busy ? (
           <span className="loading loading-spinner loading-sm" />
         ) : !hasSelection ? (
-          'Alıcı seç'
+          t('player.sendModal.selectRecipient')
         ) : !numAmount ? (
-          'Miktar gir'
+          t('player.sendModal.enterAmount')
         ) : exceeds ? (
-          'Yetersiz bakiye'
+          t('player.sendModal.insufficientShort')
         ) : isAll ? (
-          <>Herkese {fmt(numAmount, cur)} gönder ({fmt(totalCost, cur)})</>
+          t('player.sendModal.sendToAllAction', { amount: fmt(numAmount, cur), total: fmt(totalCost, cur) })
         ) : (
-          <>💸 {recipient.name}'e {fmt(numAmount, cur)} Gönder</>
+          t('player.sendModal.sendTo', { name: recipient.name, amount: fmt(numAmount, cur) })
         )}
       </button>
     </Modal>
@@ -657,42 +670,41 @@ function SendModal({ open, socket, state, me, others, onClose }) {
 }
 
 function PayBankModal({ open, socket, state, me, onClose }) {
+  const { t } = useTranslation();
   const cur = state.config.currency;
   const [amount, setAmount] = useState('');
   const [busy, setBusy] = useState(false);
 
   useEffect(() => { if (open) setAmount(''); }, [open]);
 
-  const send = async () => {
-    const v = Number(amount);
-    if (!v || v <= 0) return toast.error('Geçersiz miktar');
-    if (v > me.balance) return toast.error('Yetersiz bakiye');
-    setBusy(true);
-    try {
-      await emit(socket, 'pay-to-bank', { amount: v });
-      toast.success(`Bankaya ${fmt(v, cur)} ödendi`);
-      onClose();
-    } catch (e) { toast.error(e.message); } finally { setBusy(false); }
-  };
-
   const numAmount = Number(amount) || 0;
   const exceeds = numAmount > me.balance;
   const remaining = me.balance - numAmount;
   const canPay = numAmount > 0 && !exceeds && !busy;
 
+  const send = async () => {
+    if (!numAmount || exceeds) return;
+    setBusy(true);
+    try {
+      await emit(socket, 'pay-to-bank', { amount: numAmount });
+      toast.success(t('player.payBankModal.paid', { amount: fmt(numAmount, cur) }));
+      onClose();
+    } catch (e) { toast.error(e.message); } finally { setBusy(false); }
+  };
+
   return (
-    <Modal open={open} onClose={onClose} title="🏦 Bankaya Öde">
-      <p className="text-sm opacity-70 -mt-2 mb-3">Vergi, mülk satın alma vb. için kullan.</p>
+    <Modal open={open} onClose={onClose} title={`🏦 ${t('player.payBankModal.title')}`}>
+      <p className="text-sm opacity-70 -mt-2 mb-3">{t('player.payBankModal.hint')}</p>
 
       <div className="flex items-center justify-between bg-base-300 rounded-lg px-3 py-2 mb-3">
-        <span className="text-xs opacity-70 uppercase tracking-wide">Bakiye</span>
+        <span className="text-xs opacity-70 uppercase tracking-wide">{t('common.balance')}</span>
         <span className="font-bold balance-display text-lg">{fmt(me.balance, cur)}</span>
       </div>
 
       <div className="form-control w-full">
         <div className="label py-1">
-          <span className="label-text font-semibold">Miktar</span>
-          <button type="button" className="label-text-alt link link-primary" onClick={() => setAmount(String(me.balance))}>Tümü</button>
+          <span className="label-text font-semibold">{t('player.sendModal.amount')}</span>
+          <button type="button" className="label-text-alt link link-primary" onClick={() => setAmount(String(me.balance))}>{t('player.sendModal.all')}</button>
         </div>
         <label className={`input input-bordered flex items-center gap-2 h-16 ${exceeds ? 'input-error' : ''}`}>
           <input
@@ -710,11 +722,11 @@ function PayBankModal({ open, socket, state, me, onClose }) {
         <div className="label py-1">
           <span className="label-text-alt">
             {exceeds ? (
-              <span className="text-error font-semibold">⚠ Yetersiz bakiye</span>
+              <span className="text-error font-semibold">{t('player.sendModal.insufficient')}</span>
             ) : numAmount > 0 ? (
-              <span className="opacity-70">Kalan: <span className="font-semibold balance-display">{fmt(remaining, cur)}</span></span>
+              <span className="opacity-70">{t('common.remaining')}: <span className="font-semibold balance-display">{fmt(remaining, cur)}</span></span>
             ) : (
-              <span className="opacity-50">Hızlı seç ↓</span>
+              <span className="opacity-50">{t('player.sendModal.quickPick')}</span>
             )}
           </span>
         </div>
@@ -722,10 +734,10 @@ function PayBankModal({ open, socket, state, me, onClose }) {
 
       <div className="mt-5">
         <div className="flex items-center justify-between mb-2">
-          <div className="text-xs opacity-60 uppercase tracking-wide">Hızlı ekle</div>
+          <div className="text-xs opacity-60 uppercase tracking-wide">{t('player.sendModal.quickAdd')}</div>
           {numAmount > 0 && (
             <button type="button" className="text-xs link link-error" onClick={() => setAmount('')}>
-              Sıfırla
+              {t('common.reset')}
             </button>
           )}
         </div>
@@ -751,11 +763,11 @@ function PayBankModal({ open, socket, state, me, onClose }) {
         {busy ? (
           <span className="loading loading-spinner loading-sm" />
         ) : !numAmount ? (
-          'Miktar gir'
+          t('player.sendModal.enterAmount')
         ) : exceeds ? (
-          'Yetersiz bakiye'
+          t('player.sendModal.insufficientShort')
         ) : (
-          <>🏦 Bankaya {fmt(numAmount, cur)} Öde</>
+          t('player.payBankModal.pay', { amount: fmt(numAmount, cur) })
         )}
       </button>
     </Modal>
@@ -763,6 +775,7 @@ function PayBankModal({ open, socket, state, me, onClose }) {
 }
 
 function Modal({ open, onClose, title, headerColor, children }) {
+  const { t } = useTranslation();
   useEffect(() => {
     if (!open) return;
     const onKey = (e) => e.key === 'Escape' && onClose();
@@ -794,7 +807,7 @@ function Modal({ open, onClose, title, headerColor, children }) {
           <button
             onClick={onClose}
             className={`btn btn-circle btn-ghost ${headerColor ? 'text-white hover:bg-white/20' : ''}`}
-            aria-label="Kapat"
+            aria-label={t('common.close')}
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <line x1="18" y1="6" x2="6" y2="18" />

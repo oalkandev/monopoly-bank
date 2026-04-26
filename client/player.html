@@ -11,6 +11,8 @@
         if (t === 'monopoly-light' || t === 'monopoly-dark') {
           document.documentElement.dataset.theme = t;
         }
+        var l = localStorage.getItem('monopoly-lang');
+        if (l) document.documentElement.lang = l;
       } catch (e) {}
     })();
   </script>

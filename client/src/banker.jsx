@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import toast, { Toaster } from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
+import './i18n.js';
 import { useSocket } from './useSocket.js';
 import { emit, formatRelative, getQuickAmounts, DEFAULT_QUICK_AMOUNTS } from './socket.js';
 import { QrCode } from './QrCode.jsx';
@@ -10,28 +12,22 @@ import { ConnectionBadge } from './ConnectionBadge.jsx';
 import { DiceNotification } from './DiceNotification.jsx';
 import { DiceList } from './DiceHistory.jsx';
 import { GameTimer } from './GameTimer.jsx';
+import { LanguageSwitcher } from './LanguageSwitcher.jsx';
 import { copyText } from './clipboard.js';
 import {
-  QrCode as QrIcon, Dices, Plus, Minus, RotateCcw, MoreVertical, Trash2, Copy, Check, Pencil,
+  QrCode as QrIcon, Dices, Plus, Minus, RotateCcw, MoreVertical, Trash2, Copy, Check,
   Settings, UserPlus, Users, PlayCircle,
-  Receipt, ArrowLeftRight, ArrowDownToLine, ArrowUpFromLine, Flag, Undo2, Clock,
+  Receipt, ArrowLeftRight, ArrowDownToLine, ArrowUpFromLine, Flag, Undo2,
   Wallet, ListChecks,
 } from 'lucide-react';
 import '../index.css';
 
 const PLAYER_COLORS = [
-  '#3b82f6', // mavi
-  '#ef4444', // kırmızı
-  '#eab308', // sarı
-  '#22c55e', // yeşil
-  '#a855f7', // mor
-  '#06b6d4', // turkuaz
-  '#ec4899', // pembe
-  '#f97316', // turuncu
+  '#3b82f6', '#ef4444', '#eab308', '#22c55e', '#a855f7', '#06b6d4', '#ec4899', '#f97316',
 ];
 
 function fmt(n, currency) {
-  return `${n.toLocaleString('tr-TR')}${currency}`;
+  return `${n.toLocaleString()}${currency}`;
 }
 
 function App() {
@@ -74,16 +70,17 @@ function App() {
 }
 
 function Header({ connected, lanUrl, socket, state }) {
+  const { t } = useTranslation();
   const onReset = async () => {
-    if (!confirm('Tüm oyun sıfırlansın mı? Oyuncular ve bakiyeler silinecek.')) return;
-    try { await emit(socket, 'reset'); toast.success('Oyun sıfırlandı'); }
+    if (!confirm(t('banker.resetGameConfirm'))) return;
+    try { await emit(socket, 'reset'); toast.success(t('banker.gameReset')); }
     catch (e) { toast.error(e.message); }
   };
 
   return (
     <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
       <h1 className="text-2xl md:text-3xl font-black flex items-center gap-2">
-        <span className="text-3xl md:text-4xl">🏦</span> Monopoly Bank
+        <span className="text-3xl md:text-4xl">🏦</span> {t('common.appName')}
       </h1>
       <div className="flex items-center gap-2 flex-wrap">
         <code className="text-xs opacity-70 bg-base-300 px-2 py-1 rounded hidden sm:inline">{lanUrl}</code>
@@ -91,16 +88,17 @@ function Header({ connected, lanUrl, socket, state }) {
           <GameTimer startedAt={state.startedAt ?? state.transactions?.[0]?.ts ?? Date.now()} />
         )}
         <ConnectionBadge connected={connected} />
+        <LanguageSwitcher />
         <ThemeToggle />
         {state.status === 'active' && (
           <div className="dropdown dropdown-end">
-            <label tabIndex={0} className="btn btn-ghost btn-circle" aria-label="Menü">
+            <label tabIndex={0} className="btn btn-ghost btn-circle" aria-label={t('common.menu')}>
               <MoreVertical size={20} />
             </label>
             <ul tabIndex={0} className="menu dropdown-content mt-3 z-[1] p-2 shadow-xl bg-base-200 rounded-box w-52">
               <li>
                 <a onClick={onReset} className="text-error gap-2">
-                  <RotateCcw size={16} /> Oyunu Sıfırla
+                  <RotateCcw size={16} /> {t('banker.resetGame')}
                 </a>
               </li>
             </ul>
@@ -111,9 +109,8 @@ function Header({ connected, lanUrl, socket, state }) {
   );
 }
 
-/* ───────── SETUP VIEW ───────── */
-
 function SetupView({ socket, state, lanUrl }) {
+  const { t } = useTranslation();
   const [name, setName] = useState('');
   const [color, setColor] = useState(PLAYER_COLORS[state.players.length % PLAYER_COLORS.length]);
   const [startingBalance, setStartingBalance] = useState(state.config.startingBalance);
@@ -123,15 +120,15 @@ function SetupView({ socket, state, lanUrl }) {
 
   const addQuickAmount = () => {
     const v = Math.floor(Number(newQuick));
-    if (!Number.isFinite(v) || v <= 0) return toast.error('Pozitif tam sayı girin');
-    if (quickAmounts.includes(v)) return toast.error('Bu tutar zaten var');
-    if (quickAmounts.length >= 12) return toast.error('En fazla 12 tutar olabilir');
+    if (!Number.isFinite(v) || v <= 0) return toast.error(t('banker.addAmountError'));
+    if (quickAmounts.includes(v)) return toast.error(t('banker.duplicateAmountError'));
+    if (quickAmounts.length >= 12) return toast.error(t('banker.maxAmountsError'));
     setQuickAmounts([...quickAmounts, v].sort((a, b) => a - b));
     setNewQuick('');
   };
 
   const removeQuickAmount = (n) => {
-    if (quickAmounts.length <= 1) return toast.error('En az 1 tutar bırak');
+    if (quickAmounts.length <= 1) return toast.error(t('banker.minAmountsError'));
     setQuickAmounts(quickAmounts.filter(x => x !== n));
   };
 
@@ -139,7 +136,7 @@ function SetupView({ socket, state, lanUrl }) {
 
   const addPlayer = async () => {
     const trimmed = name.trim();
-    if (!trimmed) return toast.error('İsim girin');
+    if (!trimmed) return toast.error(t('banker.nameRequired'));
     try {
       await emit(socket, 'add-player', { name: trimmed, color });
       setName('');
@@ -148,7 +145,7 @@ function SetupView({ socket, state, lanUrl }) {
   };
 
   const removePlayer = async (id, playerName) => {
-    if (!confirm(`${playerName} silinsin mi?`)) return;
+    if (!confirm(t('banker.removeGameConfirm', { name: playerName }))) return;
     try { await emit(socket, 'remove-player', { playerId: id }); }
     catch (e) { toast.error(e.message); }
   };
@@ -156,7 +153,7 @@ function SetupView({ socket, state, lanUrl }) {
   const startGame = async () => {
     const sb = Number(startingBalance);
     const pg = Number(passGoBonus);
-    if (!Number.isFinite(sb) || sb <= 0) return toast.error('Geçerli başlangıç parası girin');
+    if (!Number.isFinite(sb) || sb <= 0) return toast.error(t('banker.validBalanceError'));
     try { await emit(socket, 'start-game', { startingBalance: sb, passGoBonus: pg, quickAmounts }); }
     catch (e) { toast.error(e.message); }
   };
@@ -166,23 +163,23 @@ function SetupView({ socket, state, lanUrl }) {
       <div className="lg:col-span-1 space-y-4">
         <div className="card bg-base-200 shadow-md">
           <div className="card-body gap-6">
-            <h2 className="card-title text-base gap-2"><Settings size={18} /> Ayarlar</h2>
+            <h2 className="card-title text-base gap-2"><Settings size={18} /> {t('banker.settings')}</h2>
             <label className="form-control">
-              <div className="label py-1"><span className="label-text">Başlangıç Parası</span></div>
+              <div className="label py-1"><span className="label-text">{t('banker.startingBalance')}</span></div>
               <input type="number" className="input input-bordered" value={startingBalance}
                 onChange={(e) => setStartingBalance(e.target.value)} min="1" />
             </label>
             <label className="form-control">
-              <div className="label py-1"><span className="label-text">GO Bonusu</span></div>
+              <div className="label py-1"><span className="label-text">{t('banker.passGoBonus')}</span></div>
               <input type="number" className="input input-bordered" value={passGoBonus}
                 onChange={(e) => setPassGoBonus(e.target.value)} min="0" />
             </label>
 
             <div className="form-control">
               <div className="label py-1">
-                <span className="label-text">Hızlı Ekle Tutarları</span>
+                <span className="label-text">{t('banker.quickAmounts')}</span>
                 <button type="button" className="label-text-alt link link-primary" onClick={resetQuickAmounts}>
-                  Varsayılana dön
+                  {t('common.default')}
                 </button>
               </div>
 
@@ -197,7 +194,7 @@ function SetupView({ socket, state, lanUrl }) {
                       type="button"
                       className="btn btn-ghost btn-xs btn-circle text-error/70 hover:text-error"
                       onClick={() => removeQuickAmount(n)}
-                      aria-label={`${n} tutarını sil`}
+                      aria-label={t('banker.deleteAmountAria', { n })}
                     >
                       <Trash2 size={16} />
                     </button>
@@ -209,7 +206,7 @@ function SetupView({ socket, state, lanUrl }) {
                 <input
                   type="number"
                   inputMode="numeric"
-                  placeholder="Yeni tutar"
+                  placeholder={t('banker.newAmount')}
                   className="input input-bordered join-item flex-1 min-w-0"
                   value={newQuick}
                   onChange={(e) => setNewQuick(e.target.value)}
@@ -221,7 +218,7 @@ function SetupView({ socket, state, lanUrl }) {
                   className="btn btn-primary join-item gap-1"
                   onClick={addQuickAmount}
                 >
-                  <Plus size={16} /> Ekle
+                  <Plus size={16} /> {t('common.add')}
                 </button>
               </div>
             </div>
@@ -230,10 +227,10 @@ function SetupView({ socket, state, lanUrl }) {
 
         <div className="card bg-base-200 shadow-md">
           <div className="card-body">
-            <h2 className="card-title text-base gap-2"><UserPlus size={18} /> Oyuncu Ekle</h2>
+            <h2 className="card-title text-base gap-2"><UserPlus size={18} /> {t('banker.addPlayer')}</h2>
             <input
               className="input input-bordered"
-              placeholder="Oyuncu adı"
+              placeholder={t('banker.playerName')}
               value={name}
               onChange={(e) => setName(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && addPlayer()}
@@ -245,12 +242,12 @@ function SetupView({ socket, state, lanUrl }) {
                   className={`w-9 h-9 rounded-full border-2 transition-transform hover:scale-110 ${color === c ? 'border-base-content scale-110' : 'border-transparent'}`}
                   style={{ backgroundColor: c }}
                   onClick={() => setColor(c)}
-                  aria-label={`Renk ${c}`}
+                  aria-label={t('banker.colorAria', { color: c })}
                 />
               ))}
             </div>
             <button className="btn btn-primary mt-2 gap-2" onClick={addPlayer}>
-              <UserPlus size={18} /> Ekle
+              <UserPlus size={18} /> {t('common.add')}
             </button>
           </div>
         </div>
@@ -261,18 +258,19 @@ function SetupView({ socket, state, lanUrl }) {
           onClick={startGame}
         >
           <PlayCircle size={22} />
-          Oyunu Başlat
-          {state.players.length < 2 && ` (${state.players.length}/2)`}
+          {state.players.length < 2
+            ? t('banker.startGameNeed', { count: state.players.length })
+            : t('banker.startGame')}
         </button>
       </div>
 
       <div className="lg:col-span-2">
         <div className="card bg-base-200 shadow-md">
           <div className="card-body">
-            <h2 className="card-title text-base gap-2"><Users size={18} /> Oyuncular ({state.players.length})</h2>
+            <h2 className="card-title text-base gap-2"><Users size={18} /> {t('banker.playerCount', { count: state.players.length })}</h2>
             {state.players.length === 0 && (
               <div className="alert alert-info mt-2">
-                <span>İlk oyuncuyu ekleyin. En az 2 oyuncu gerekiyor.</span>
+                <span>{t('banker.noPlayersYet')}</span>
               </div>
             )}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
@@ -288,6 +286,7 @@ function SetupView({ socket, state, lanUrl }) {
 }
 
 function PlayerJoinCard({ player, lanUrl, onRemove }) {
+  const { t } = useTranslation();
   const link = `${lanUrl}/join/${player.token}`;
   const [copied, setCopied] = useState(false);
 
@@ -297,7 +296,7 @@ function PlayerJoinCard({ player, lanUrl, onRemove }) {
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } else {
-      toast.error("Kopyalanamadı — linki uzun basıp seçip kopyalayabilirsin");
+      toast.error(t('banker.copyFailed'));
     }
   };
 
@@ -314,7 +313,7 @@ function PlayerJoinCard({ player, lanUrl, onRemove }) {
         <button
           className="btn btn-ghost btn-xs btn-circle text-white hover:bg-white/20"
           onClick={onRemove}
-          aria-label="Sil"
+          aria-label={t('common.remove')}
         >
           <Trash2 size={14} />
         </button>
@@ -324,14 +323,12 @@ function PlayerJoinCard({ player, lanUrl, onRemove }) {
           <QrCode value={link} size={200} />
         </div>
         <button className="btn btn-xs btn-ghost gap-1 mt-1" onClick={copy}>
-          {copied ? <><Check size={12} /> Kopyalandı</> : <><Copy size={12} /> Linki kopyala</>}
+          {copied ? <><Check size={12} /> {t('common.copied')}</> : <><Copy size={12} /> {t('banker.copyLink')}</>}
         </button>
       </div>
     </div>
   );
 }
-
-/* ───────── ACTIVE VIEW ───────── */
 
 function ActiveView({ socket, state, lanUrl }) {
   const [qrPlayer, setQrPlayer] = useState(null);
@@ -364,6 +361,7 @@ function ActiveView({ socket, state, lanUrl }) {
 }
 
 function QrModal({ player, lanUrl, onClose }) {
+  const { t } = useTranslation();
   const link = `${lanUrl}/join/${player.token}`;
   const [copied, setCopied] = useState(false);
 
@@ -379,7 +377,7 @@ function QrModal({ player, lanUrl, onClose }) {
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } else {
-      toast.error("Kopyalanamadı — linki uzun basıp seçip kopyalayabilirsin");
+      toast.error(t('banker.copyFailed'));
     }
   };
 
@@ -393,16 +391,16 @@ function QrModal({ player, lanUrl, onClose }) {
           <div className="badge badge-lg text-white font-bold text-base px-4 py-3" style={{ backgroundColor: player.color }}>
             {player.name}
           </div>
-          <p className="text-sm opacity-70 mt-1">Telefon kameranı QR'a tut</p>
+          <p className="text-sm opacity-70 mt-1">{t('banker.qrModalHint')}</p>
           <div className="bg-white p-3 rounded-xl my-2">
             <QrCode value={link} size={240} />
           </div>
           <code className="text-xs opacity-60 break-all bg-base-200 px-2 py-1 rounded w-full">{link}</code>
           <div className="flex gap-2 w-full mt-2">
             <button className="btn btn-outline flex-1 gap-1" onClick={copy}>
-              {copied ? <><Check size={16} /> Kopyalandı</> : <><Copy size={16} /> Kopyala</>}
+              {copied ? <><Check size={16} /> {t('common.copied')}</> : <><Copy size={16} /> {t('common.copy')}</>}
             </button>
-            <button className="btn btn-primary flex-1" onClick={onClose}>Kapat</button>
+            <button className="btn btn-primary flex-1" onClick={onClose}>{t('common.close')}</button>
           </div>
         </div>
       </div>
@@ -411,15 +409,16 @@ function QrModal({ player, lanUrl, onClose }) {
 }
 
 function ConfigBar({ socket, state }) {
+  const { t } = useTranslation();
   const [bonus, setBonus] = useState(state.config.passGoBonus);
   const [editing, setEditing] = useState(false);
 
   const save = async () => {
     const v = Number(bonus);
-    if (!Number.isFinite(v) || v < 0) return toast.error('Geçersiz miktar');
+    if (!Number.isFinite(v) || v < 0) return toast.error(t('player.sendModal.invalidAmount'));
     try {
       await emit(socket, 'update-config', { passGoBonus: v });
-      toast.success('GO bonusu güncellendi');
+      toast.success(t('banker.passGoUpdated'));
       setEditing(false);
     } catch (e) { toast.error(e.message); }
   };
@@ -431,11 +430,11 @@ function ConfigBar({ socket, state }) {
     <div className="card bg-base-200 shadow-md">
       <div className="card-body p-3">
         <div className="flex items-center gap-4 flex-wrap text-sm">
-          <Stat label="Oyuncu" value={`${onlineCount}/${state.players.length}`} icon={<Users size={20} />} />
-          <Stat label="Toplam Para" value={fmt(totalMoney, state.config.currency)} icon={<Wallet size={20} />} />
-          <Stat label="İşlem" value={state.transactions.filter(t => !t.undone).length} icon={<ListChecks size={20} />} />
+          <Stat label={t('banker.playerStat')} value={`${onlineCount}/${state.players.length}`} icon={<Users size={20} />} />
+          <Stat label={t('banker.totalMoneyStat')} value={fmt(totalMoney, state.config.currency)} icon={<Wallet size={20} />} />
+          <Stat label={t('banker.transactionStat')} value={state.transactions.filter(tx => !tx.undone).length} icon={<ListChecks size={20} />} />
           <div className="flex items-center gap-2 ml-auto">
-            <span className="opacity-70 text-xs">GO bonusu:</span>
+            <span className="opacity-70 text-xs">{t('banker.passGoBonus')}:</span>
             {editing ? (
               <>
                 <input
@@ -476,17 +475,20 @@ function Stat({ label, value, icon }) {
 }
 
 function BankerPlayerCard({ socket, player, state, onShowQr }) {
+  const { t } = useTranslation();
   const [amount, setAmount] = useState('');
   const cur = state.config.currency;
   const numAmount = Number(amount) || 0;
   const quickAmounts = getQuickAmounts(state);
 
   const adjust = async (sign) => {
-    if (!Number.isFinite(numAmount) || numAmount <= 0) return toast.error('Pozitif miktar girin');
+    if (!Number.isFinite(numAmount) || numAmount <= 0) return toast.error(t('banker.amountPositiveError'));
     try {
       await emit(socket, 'banker-adjust', { playerId: player.id, amount: sign * numAmount });
       setAmount('');
-      toast.success(sign > 0 ? `+${fmt(numAmount, cur)} verildi` : `−${fmt(numAmount, cur)} alındı`);
+      toast.success(sign > 0
+        ? t('banker.give', { amount: '+' + fmt(numAmount, cur) })
+        : t('banker.take', { amount: '−' + fmt(numAmount, cur) }));
     } catch (e) { toast.error(e.message); }
   };
 
@@ -495,7 +497,7 @@ function BankerPlayerCard({ socket, player, state, onShowQr }) {
   const passGo = async () => {
     try {
       await emit(socket, 'pass-go', { playerId: player.id });
-      toast.success(`+${fmt(state.config.passGoBonus, cur)} (GO)`);
+      toast.success(t('banker.passGoGiven', { amount: '+' + fmt(state.config.passGoBonus, cur) }));
     } catch (e) { toast.error(e.message); }
   };
 
@@ -511,13 +513,13 @@ function BankerPlayerCard({ socket, player, state, onShowQr }) {
         <span className="font-black text-base tracking-wide drop-shadow-sm">{player.name}</span>
         <div className="flex items-center gap-1">
           <span className="text-xs font-medium opacity-90">
-            {player.online ? '● çevrimiçi' : '○ çevrimdışı'}
+            {player.online ? `● ${t('common.online')}` : `○ ${t('common.offline')}`}
           </span>
           <button
             className="btn btn-ghost btn-xs btn-circle text-white hover:bg-white/20"
             onClick={onShowQr}
-            title="QR kodu göster"
-            aria-label="QR kodu göster"
+            title={t('banker.showQrAria')}
+            aria-label={t('banker.showQrAria')}
           >
             <QrIcon size={16} />
           </button>
@@ -531,18 +533,18 @@ function BankerPlayerCard({ socket, player, state, onShowQr }) {
           <input
             type="number"
             inputMode="numeric"
-            placeholder="Miktar"
+            placeholder={t('common.amount')}
             className="input input-bordered join-item flex-1 min-w-0 h-10 min-h-0"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
             min="1"
             onKeyDown={(e) => e.key === 'Enter' && adjust(1)}
           />
-          <button className="btn btn-success join-item gap-1 h-10 min-h-0" onClick={() => adjust(1)} title="Para ver">
-            <Plus size={16} /> Ver
+          <button className="btn btn-success join-item gap-1 h-10 min-h-0" onClick={() => adjust(1)} title={t('banker.giveMoney')}>
+            <Plus size={16} /> {t('banker.giveMoney')}
           </button>
-          <button className="btn btn-error join-item gap-1 h-10 min-h-0" onClick={() => adjust(-1)} title="Para al">
-            <Minus size={16} /> Al
+          <button className="btn btn-error join-item gap-1 h-10 min-h-0" onClick={() => adjust(-1)} title={t('banker.takeMoney')}>
+            <Minus size={16} /> {t('banker.takeMoney')}
           </button>
         </div>
         <div
@@ -561,7 +563,7 @@ function BankerPlayerCard({ socket, player, state, onShowQr }) {
           ))}
         </div>
         <button className="btn btn-outline btn-warning btn-block btn-sm h-10 min-h-0 gap-2" onClick={passGo}>
-          <Dices size={18} /> GO Bonusu Ver (+{fmt(state.config.passGoBonus, cur)})
+          <Dices size={18} /> {t('banker.goBonusButton', { amount: '+' + fmt(state.config.passGoBonus, cur) })}
         </button>
       </div>
     </div>
@@ -569,7 +571,8 @@ function BankerPlayerCard({ socket, player, state, onShowQr }) {
 }
 
 function HistoryCard({ socket, state }) {
-  const [tab, setTab] = useState('tx'); // 'tx' | 'dice'
+  const { t } = useTranslation();
+  const [tab, setTab] = useState('tx');
   const [, force] = useState(0);
   const [filter, setFilter] = useState('all');
 
@@ -579,12 +582,12 @@ function HistoryCard({ socket, state }) {
   }, []);
 
   const undo = async (id) => {
-    try { await emit(socket, 'undo', { transactionId: id }); toast.success('Geri alındı'); }
+    try { await emit(socket, 'undo', { transactionId: id }); toast.success(t('history.undone')); }
     catch (e) { toast.error(e.message); }
   };
 
   const allTxs = [...state.transactions].reverse();
-  const txs = allTxs.filter(t => matchFilter(t, filter));
+  const txs = allTxs.filter(tx => matchFilter(tx, filter));
   const diceCount = state.diceRolls?.length ?? 0;
 
   return (
@@ -597,7 +600,7 @@ function HistoryCard({ socket, state }) {
             className={`tab gap-2 flex-1 ${tab === 'tx' ? 'tab-active' : ''}`}
             onClick={() => setTab('tx')}
           >
-            <Receipt size={16} /> İşlemler
+            <Receipt size={16} /> {t('history.transactions')}
             <span className="badge badge-ghost badge-xs">{allTxs.length}</span>
           </button>
           <button
@@ -606,7 +609,7 @@ function HistoryCard({ socket, state }) {
             className={`tab gap-2 flex-1 ${tab === 'dice' ? 'tab-active' : ''}`}
             onClick={() => setTab('dice')}
           >
-            <Dices size={16} /> Zarlar
+            <Dices size={16} /> {t('history.dice')}
             <span className="badge badge-ghost badge-xs">{diceCount}</span>
           </button>
         </div>
@@ -617,17 +620,17 @@ function HistoryCard({ socket, state }) {
             {allTxs.length === 0 ? (
               <div className="text-center py-8 opacity-50 text-sm">
                 <div className="text-3xl mb-2">📭</div>
-                Henüz işlem yok
+                {t('history.noTransactions')}
               </div>
             ) : txs.length === 0 ? (
               <div className="text-center py-8 opacity-50 text-sm">
                 <div className="text-3xl mb-2">🔍</div>
-                Bu filtreye uyan işlem yok
+                {t('history.noFilteredTransactions')}
               </div>
             ) : (
               <div className="overflow-y-auto max-h-[65vh] -mx-2 px-2">
-                {txs.map(t => (
-                  <TxRow key={t.id} tx={t} state={state} onUndo={undo} />
+                {txs.map(tx => (
+                  <TxRow key={tx.id} tx={tx} state={state} onUndo={undo} />
                 ))}
               </div>
             )}
@@ -642,10 +645,7 @@ function HistoryCard({ socket, state }) {
 
 function matchFilter(tx, filter) {
   if (filter === 'all') return true;
-  if (filter === 'bank') {
-    // Banka taraflı: en az bir taraf yok (yani Banka)
-    return !tx.from || !tx.to;
-  }
+  if (filter === 'bank') return !tx.from || !tx.to;
   if (filter.startsWith('player:')) {
     const id = filter.slice(7);
     return tx.from === id || tx.to === id;
@@ -654,6 +654,7 @@ function matchFilter(tx, filter) {
 }
 
 function FilterBar({ state, filter, setFilter }) {
+  const { t } = useTranslation();
   const FilterChip = ({ value, label, color, active }) => (
     <button
       type="button"
@@ -676,11 +677,11 @@ function FilterBar({ state, filter, setFilter }) {
         onClick={() => setFilter('all')}
         className={`btn btn-xs ${filter === 'all' ? 'btn-primary' : 'btn-ghost'}`}
       >
-        Tümü
+        {t('common.all')}
       </button>
       <FilterChip
         value="bank"
-        label="🏦 Banka"
+        label={`🏦 ${t('common.bank')}`}
         color="#64748b"
         active={filter === 'bank'}
       />
@@ -698,10 +699,11 @@ function FilterBar({ state, filter, setFilter }) {
 }
 
 function TxRow({ tx, state, onUndo }) {
+  const { t } = useTranslation();
   const cur = state.config.currency;
   const fromP = state.players.find(p => p.id === tx.from);
   const toP = state.players.find(p => p.id === tx.to);
-  const meta = TX_META[tx.type] ?? { Icon: ArrowLeftRight, label: tx.type, color: 'opacity-60' };
+  const meta = TX_META[tx.type] ?? { Icon: ArrowLeftRight, color: 'opacity-60' };
   const Icon = meta.Icon;
 
   return (
@@ -712,9 +714,9 @@ function TxRow({ tx, state, onUndo }) {
         </span>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1 flex-wrap text-sm">
-            {fromP ? <Chip player={fromP} /> : <span className="opacity-60 text-xs">Banka</span>}
+            {fromP ? <Chip player={fromP} /> : <span className="opacity-60 text-xs">{t('common.bank')}</span>}
             <span className="opacity-50">→</span>
-            {toP ? <Chip player={toP} /> : <span className="opacity-60 text-xs">Banka</span>}
+            {toP ? <Chip player={toP} /> : <span className="opacity-60 text-xs">{t('common.bank')}</span>}
           </div>
           <div className="flex items-baseline justify-between gap-2 mt-1">
             <span className={`font-bold balance-display ${tx.undone ? 'line-through' : ''}`}>
@@ -727,8 +729,8 @@ function TxRow({ tx, state, onUndo }) {
           <button
             className="btn btn-ghost btn-xs btn-circle opacity-0 group-hover:opacity-100 transition-opacity"
             onClick={() => onUndo(tx.id)}
-            title="Geri al"
-            aria-label="Geri al"
+            title={t('history.undoAria')}
+            aria-label={t('history.undoAria')}
           >
             <Undo2 size={14} />
           </button>
@@ -750,11 +752,11 @@ function Chip({ player }) {
 }
 
 const TX_META = {
-  'transfer':       { Icon: ArrowLeftRight,    label: 'Transfer',       color: 'text-info' },
-  'pass-go':        { Icon: Dices,             label: 'GO',             color: 'text-success' },
-  'banker-credit':  { Icon: ArrowDownToLine,   label: 'Bankadan',       color: 'text-success' },
-  'banker-debit':   { Icon: ArrowUpFromLine,   label: 'Bankaya',        color: 'text-error' },
-  'initial':        { Icon: Flag,              label: 'Başlangıç',      color: 'text-warning' },
+  'transfer':       { Icon: ArrowLeftRight,    color: 'text-info' },
+  'pass-go':        { Icon: Dices,             color: 'text-success' },
+  'banker-credit':  { Icon: ArrowDownToLine,   color: 'text-success' },
+  'banker-debit':   { Icon: ArrowUpFromLine,   color: 'text-error' },
+  'initial':        { Icon: Flag,              color: 'text-warning' },
 };
 
 createRoot(document.getElementById('root')).render(<App />);
