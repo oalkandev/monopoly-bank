@@ -477,12 +477,12 @@ function BankerPlayerCard({ socket, player, state, onShowQr }) {
             <Minus size={16} /> Al
           </button>
         </div>
-        <div className="grid grid-cols-6 gap-1 mt-1">
+        <div className="grid grid-cols-6 gap-1 mt-2">
           {[1, 5, 10, 50, 100, 500].map(n => (
             <button
               key={n}
               type="button"
-              className="btn btn-xs btn-outline"
+              className="btn btn-sm btn-outline h-10"
               onClick={() => addQuick(n)}
             >
               +{n}
