@@ -489,7 +489,7 @@ function BankerPlayerCard({ socket, player, state, onShowQr }) {
             </button>
           ))}
         </div>
-        <button className="btn btn-outline btn-warning btn-block mt-2 gap-2" onClick={passGo}>
+        <button className="btn btn-outline btn-warning btn-block btn-sm h-10 min-h-0 mt-1 gap-2" onClick={passGo}>
           <Dices size={18} /> GO Bonusu Ver (+{fmt(state.config.passGoBonus, cur)})
         </button>
       </div>
