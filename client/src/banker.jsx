@@ -455,8 +455,8 @@ function BankerPlayerCard({ socket, player, state, onShowQr }) {
           </button>
         </div>
       </div>
-      <div className="card-body p-4">
-        <div className="balance-display text-center text-3xl xl:text-4xl font-black my-1">
+      <div className="card-body p-4 gap-3">
+        <div className="balance-display text-center text-3xl xl:text-4xl font-black">
           {fmt(player.balance, cur)}
         </div>
         <div className="join w-full">
@@ -477,7 +477,7 @@ function BankerPlayerCard({ socket, player, state, onShowQr }) {
             <Minus size={16} /> Al
           </button>
         </div>
-        <div className="grid grid-cols-6 gap-1 mt-2">
+        <div className="grid grid-cols-6 gap-1">
           {[1, 5, 10, 50, 100, 500].map(n => (
             <button
               key={n}
@@ -489,7 +489,7 @@ function BankerPlayerCard({ socket, player, state, onShowQr }) {
             </button>
           ))}
         </div>
-        <button className="btn btn-outline btn-warning btn-block btn-sm h-10 min-h-0 mt-1 gap-2" onClick={passGo}>
+        <button className="btn btn-outline btn-warning btn-block btn-sm h-10 min-h-0 gap-2" onClick={passGo}>
           <Dices size={18} /> GO Bonusu Ver (+{fmt(state.config.passGoBonus, cur)})
         </button>
       </div>
