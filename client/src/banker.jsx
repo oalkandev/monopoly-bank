@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import toast, { Toaster } from 'react-hot-toast';
 import { useSocket } from './useSocket.js';
-import { emit, formatRelative } from './socket.js';
+import { emit, formatRelative, getQuickAmounts, DEFAULT_QUICK_AMOUNTS } from './socket.js';
 import { QrCode } from './QrCode.jsx';
 import { ThemeToggle } from './ThemeToggle.jsx';
 import { useTheme } from './useTheme.js';
@@ -117,6 +117,24 @@ function SetupView({ socket, state, lanUrl }) {
   const [color, setColor] = useState(PLAYER_COLORS[state.players.length % PLAYER_COLORS.length]);
   const [startingBalance, setStartingBalance] = useState(state.config.startingBalance);
   const [passGoBonus, setPassGoBonus] = useState(state.config.passGoBonus);
+  const [quickAmounts, setQuickAmounts] = useState(getQuickAmounts(state));
+  const [newQuick, setNewQuick] = useState('');
+
+  const addQuickAmount = () => {
+    const v = Math.floor(Number(newQuick));
+    if (!Number.isFinite(v) || v <= 0) return toast.error('Pozitif tam sayı girin');
+    if (quickAmounts.includes(v)) return toast.error('Bu tutar zaten var');
+    if (quickAmounts.length >= 12) return toast.error('En fazla 12 tutar olabilir');
+    setQuickAmounts([...quickAmounts, v].sort((a, b) => a - b));
+    setNewQuick('');
+  };
+
+  const removeQuickAmount = (n) => {
+    if (quickAmounts.length <= 1) return toast.error('En az 1 tutar bırak');
+    setQuickAmounts(quickAmounts.filter(x => x !== n));
+  };
+
+  const resetQuickAmounts = () => setQuickAmounts([...DEFAULT_QUICK_AMOUNTS]);
 
   const addPlayer = async () => {
     const trimmed = name.trim();
@@ -138,7 +156,7 @@ function SetupView({ socket, state, lanUrl }) {
     const sb = Number(startingBalance);
     const pg = Number(passGoBonus);
     if (!Number.isFinite(sb) || sb <= 0) return toast.error('Geçerli başlangıç parası girin');
-    try { await emit(socket, 'start-game', { startingBalance: sb, passGoBonus: pg }); }
+    try { await emit(socket, 'start-game', { startingBalance: sb, passGoBonus: pg, quickAmounts }); }
     catch (e) { toast.error(e.message); }
   };
 
@@ -158,6 +176,49 @@ function SetupView({ socket, state, lanUrl }) {
               <input type="number" className="input input-bordered" value={passGoBonus}
                 onChange={(e) => setPassGoBonus(e.target.value)} min="0" />
             </label>
+
+            <div className="form-control">
+              <div className="label py-1">
+                <span className="label-text">Hızlı Ekle Tutarları</span>
+                <button type="button" className="label-text-alt link link-primary" onClick={resetQuickAmounts}>
+                  Varsayılana dön
+                </button>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {quickAmounts.map(n => (
+                  <span key={n} className="badge badge-outline badge-lg gap-1.5">
+                    +{n}
+                    <button
+                      type="button"
+                      className="opacity-60 hover:opacity-100 hover:text-error"
+                      onClick={() => removeQuickAmount(n)}
+                      aria-label={`${n} tutarını sil`}
+                    >
+                      <Trash2 size={12} />
+                    </button>
+                  </span>
+                ))}
+              </div>
+              <div className="join mt-2">
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  placeholder="Yeni tutar"
+                  className="input input-bordered input-sm join-item flex-1 min-w-0"
+                  value={newQuick}
+                  onChange={(e) => setNewQuick(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addQuickAmount())}
+                  min="1"
+                />
+                <button
+                  type="button"
+                  className="btn btn-sm btn-primary join-item gap-1"
+                  onClick={addQuickAmount}
+                >
+                  <Plus size={14} /> Ekle
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -412,6 +473,7 @@ function BankerPlayerCard({ socket, player, state, onShowQr }) {
   const [amount, setAmount] = useState('');
   const cur = state.config.currency;
   const numAmount = Number(amount) || 0;
+  const quickAmounts = getQuickAmounts(state);
 
   const adjust = async (sign) => {
     if (!Number.isFinite(numAmount) || numAmount <= 0) return toast.error('Pozitif miktar girin');
@@ -477,8 +539,11 @@ function BankerPlayerCard({ socket, player, state, onShowQr }) {
             <Minus size={16} /> Al
           </button>
         </div>
-        <div className="grid grid-cols-6 gap-1">
-          {[1, 5, 10, 50, 100, 500].map(n => (
+        <div
+          className="grid gap-1"
+          style={{ gridTemplateColumns: `repeat(${Math.min(quickAmounts.length, 6)}, minmax(0, 1fr))` }}
+        >
+          {quickAmounts.map(n => (
             <button
               key={n}
               type="button"

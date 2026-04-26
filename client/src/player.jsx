@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 import toast, { Toaster } from 'react-hot-toast';
 import { useSocket } from './useSocket.js';
 import { useWakeLock } from './useWakeLock.js';
-import { emit, describeTx, txDirection, formatRelative } from './socket.js';
+import { emit, describeTx, txDirection, formatRelative, getQuickAmounts } from './socket.js';
 import { ThemeToggle } from './ThemeToggle.jsx';
 import { useTheme } from './useTheme.js';
 import { useSoundSetting, useReceiveSound } from './useReceiveSound.js';
@@ -170,15 +170,15 @@ function PlayingView({ socket, state, me, sound }) {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full">
             <button
-              className="btn btn-primary btn-lg whitespace-nowrap"
+              className="btn btn-primary whitespace-nowrap"
               onClick={() => setShowSend(true)}
               disabled={otherPlayers.length === 0}
             >
-              <Send size={20} className="shrink-0" />
+              <Send size={18} className="shrink-0" />
               <span>Para Gönder</span>
             </button>
-            <button className="btn btn-accent btn-lg whitespace-nowrap" onClick={() => setShowBank(true)}>
-              <Building2 size={20} className="shrink-0" />
+            <button className="btn btn-accent whitespace-nowrap" onClick={() => setShowBank(true)}>
+              <Building2 size={18} className="shrink-0" />
               <span>Bankaya Öde</span>
             </button>
           </div>
@@ -610,8 +610,11 @@ function SendModal({ open, socket, state, me, others, onClose }) {
             </button>
           )}
         </div>
-        <div className="grid grid-cols-6 gap-1.5">
-          {[1, 5, 10, 50, 100, 500].map(p => {
+        <div
+          className="grid gap-1.5"
+          style={{ gridTemplateColumns: `repeat(${Math.min(getQuickAmounts(state).length, 6)}, minmax(0, 1fr))` }}
+        >
+          {getQuickAmounts(state).map(p => {
             const newAmount = numAmount + p;
             const newTotal = isAll ? newAmount * others.length : newAmount;
             return (
@@ -726,8 +729,11 @@ function PayBankModal({ open, socket, state, me, onClose }) {
             </button>
           )}
         </div>
-        <div className="grid grid-cols-6 gap-1.5">
-          {[1, 5, 10, 50, 100, 500].map(p => (
+        <div
+          className="grid gap-1.5"
+          style={{ gridTemplateColumns: `repeat(${Math.min(getQuickAmounts(state).length, 6)}, minmax(0, 1fr))` }}
+        >
+          {getQuickAmounts(state).map(p => (
             <button
               key={p}
               type="button"

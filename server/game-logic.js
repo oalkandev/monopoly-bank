@@ -3,11 +3,18 @@ import { randomBytes } from 'node:crypto';
 const id = (prefix) => `${prefix}_${randomBytes(4).toString('hex')}`;
 const token = () => randomBytes(4).toString('hex');
 
+export const DEFAULT_QUICK_AMOUNTS = [1, 5, 10, 50, 100, 500];
+
 export function createInitialState() {
   return {
     version: 1,
     status: 'setup',
-    config: { currency: '₺', startingBalance: 1500, passGoBonus: 200 },
+    config: {
+      currency: '₺',
+      startingBalance: 1500,
+      passGoBonus: 200,
+      quickAmounts: [...DEFAULT_QUICK_AMOUNTS],
+    },
     players: [],
     transactions: [],
     diceRolls: [],

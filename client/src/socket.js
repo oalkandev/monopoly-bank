@@ -39,6 +39,14 @@ export function txDirection(t, meId) {
   return 'neutral';
 }
 
+export const DEFAULT_QUICK_AMOUNTS = [1, 5, 10, 50, 100, 500];
+
+export function getQuickAmounts(state) {
+  const arr = state?.config?.quickAmounts;
+  if (Array.isArray(arr) && arr.length > 0) return arr;
+  return DEFAULT_QUICK_AMOUNTS;
+}
+
 export function formatRelative(ts) {
   const diff = Math.max(0, Date.now() - ts);
   const sec = Math.floor(diff / 1000);
