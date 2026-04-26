@@ -1,12 +1,60 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Dices } from 'lucide-react';
 
-const DICE_FACES = ['', '⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
+const DOT_PATTERNS = {
+  1: [[30, 30]],
+  2: [[15, 15], [45, 45]],
+  3: [[15, 15], [30, 30], [45, 45]],
+  4: [[15, 15], [45, 15], [15, 45], [45, 45]],
+  5: [[15, 15], [45, 15], [30, 30], [15, 45], [45, 45]],
+  6: [[15, 15], [45, 15], [15, 30], [45, 30], [15, 45], [45, 45]],
+};
+
+function DieFace({ value, dotColor = '#1e293b' }) {
+  const dots = DOT_PATTERNS[value] ?? [];
+  return (
+    <svg viewBox="0 0 60 60" className="w-full h-full block">
+      {dots.map(([cx, cy], i) => (
+        <circle key={i} cx={cx} cy={cy} r={6} fill={dotColor} />
+      ))}
+    </svg>
+  );
+}
+
+function AnimatedDie({ finalValue, rollKey, dotColor }) {
+  const [face, setFace] = useState(() => 1 + Math.floor(Math.random() * 6));
+  const [bouncing, setBouncing] = useState(false);
+
+  useEffect(() => {
+    setBouncing(true);
+    let ticks = 0;
+    const TOTAL_TICKS = 10;
+    const interval = setInterval(() => {
+      ticks++;
+      if (ticks < TOTAL_TICKS) {
+        setFace(1 + Math.floor(Math.random() * 6));
+      } else {
+        setFace(finalValue);
+        clearInterval(interval);
+        setTimeout(() => setBouncing(false), 200);
+      }
+    }, 70);
+    return () => clearInterval(interval);
+  }, [rollKey, finalValue]);
+
+  return (
+    <div
+      className={`w-24 h-24 bg-white rounded-2xl shadow-inner p-3 ${bouncing ? 'die-rolling' : ''}`}
+    >
+      <DieFace value={face} dotColor={dotColor} />
+    </div>
+  );
+}
 
 export function DiceNotification({ roll, players, onClose }) {
   useEffect(() => {
     if (!roll) return;
-    const id = setTimeout(onClose, 3500);
+    const id = setTimeout(onClose, 4000);
     return () => clearTimeout(id);
   }, [roll, onClose]);
 
@@ -35,9 +83,9 @@ export function DiceNotification({ roll, players, onClose }) {
           {player?.name ?? 'Bilinmeyen'}
         </div>
         <div className="flex items-center justify-center gap-4 my-4">
-          <DieFace value={roll.dice[0]} />
+          <AnimatedDie finalValue={roll.dice[0]} rollKey={`${roll.key ?? roll.ts}-a`} dotColor={color} />
           <span className="text-5xl text-white/60 font-light">+</span>
-          <DieFace value={roll.dice[1]} />
+          <AnimatedDie finalValue={roll.dice[1]} rollKey={`${roll.key ?? roll.ts}-b`} dotColor={color} />
         </div>
         <div className="mt-4 text-white">
           <div className="text-xs uppercase tracking-wider opacity-75 font-bold">Toplam</div>
@@ -52,17 +100,6 @@ export function DiceNotification({ roll, players, onClose }) {
         </div>
         <div className="mt-5 text-xs text-white/60">kapatmak için dokun</div>
       </div>
-    </div>
-  );
-}
-
-function DieFace({ value }) {
-  return (
-    <div
-      className="w-24 h-24 bg-white rounded-2xl shadow-inner flex items-center justify-center text-7xl font-black text-slate-900 select-none"
-      style={{ lineHeight: 1 }}
-    >
-      {DICE_FACES[value]}
     </div>
   );
 }
