@@ -15,6 +15,7 @@ import {
   QrCode as QrIcon, Dices, Plus, Minus, RotateCcw, MoreVertical, Trash2, Copy, Check, Pencil,
   Settings, UserPlus, Users, PlayCircle,
   Receipt, ArrowLeftRight, ArrowDownToLine, ArrowUpFromLine, Flag, Undo2, Clock,
+  Wallet, ListChecks,
 } from 'lucide-react';
 import '../index.css';
 
@@ -430,9 +431,9 @@ function ConfigBar({ socket, state }) {
     <div className="card bg-base-200 shadow-md">
       <div className="card-body p-3">
         <div className="flex items-center gap-4 flex-wrap text-sm">
-          <Stat label="Oyuncu" value={`${onlineCount}/${state.players.length}`} icon="👥" />
-          <Stat label="Toplam Para" value={fmt(totalMoney, state.config.currency)} icon="💰" />
-          <Stat label="İşlem" value={state.transactions.filter(t => !t.undone).length} icon="📝" />
+          <Stat label="Oyuncu" value={`${onlineCount}/${state.players.length}`} icon={<Users size={20} />} />
+          <Stat label="Toplam Para" value={fmt(totalMoney, state.config.currency)} icon={<Wallet size={20} />} />
+          <Stat label="İşlem" value={state.transactions.filter(t => !t.undone).length} icon={<ListChecks size={20} />} />
           <div className="flex items-center gap-2 ml-auto">
             <span className="opacity-70 text-xs">GO bonusu:</span>
             {editing ? (
@@ -465,7 +466,7 @@ function ConfigBar({ socket, state }) {
 function Stat({ label, value, icon }) {
   return (
     <div className="flex items-center gap-2">
-      <span className="text-lg">{icon}</span>
+      <span className="opacity-70">{icon}</span>
       <div>
         <div className="text-xs opacity-60 leading-tight">{label}</div>
         <div className="font-bold balance-display leading-tight">{value}</div>
