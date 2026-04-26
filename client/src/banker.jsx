@@ -464,16 +464,16 @@ function BankerPlayerCard({ socket, player, state, onShowQr }) {
             type="number"
             inputMode="numeric"
             placeholder="Miktar"
-            className="input input-bordered input-sm join-item flex-1 min-w-0"
+            className="input input-bordered join-item flex-1 min-w-0 h-10 min-h-0"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
             min="1"
             onKeyDown={(e) => e.key === 'Enter' && adjust(1)}
           />
-          <button className="btn btn-success btn-sm join-item gap-1" onClick={() => adjust(1)} title="Para ver">
+          <button className="btn btn-success join-item gap-1 h-10 min-h-0" onClick={() => adjust(1)} title="Para ver">
             <Plus size={16} /> Ver
           </button>
-          <button className="btn btn-error btn-sm join-item gap-1" onClick={() => adjust(-1)} title="Para al">
+          <button className="btn btn-error join-item gap-1 h-10 min-h-0" onClick={() => adjust(-1)} title="Para al">
             <Minus size={16} /> Al
           </button>
         </div>
