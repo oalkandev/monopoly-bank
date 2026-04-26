@@ -6,6 +6,11 @@ import { emit, formatRelative } from './socket.js';
 import { QrCode } from './QrCode.jsx';
 import { ThemeToggle } from './ThemeToggle.jsx';
 import { useTheme } from './useTheme.js';
+import { ConnectionBadge } from './ConnectionBadge.jsx';
+import { DiceNotification } from './DiceNotification.jsx';
+import {
+  QrCode as QrIcon, Dices, Plus, Minus, RotateCcw, MoreVertical, Trash2, Copy, Check, Pencil,
+} from 'lucide-react';
 import '../index.css';
 
 const PLAYER_COLORS = [
@@ -25,8 +30,9 @@ function fmt(n, currency) {
 
 function App() {
   useTheme();
-  const { socket, state, connected } = useSocket({ role: 'banker' });
+  const { socket, state, connected, diceRoll } = useSocket({ role: 'banker' });
   const [lanUrl, setLanUrl] = useState(location.origin);
+  const [activeRoll, setActiveRoll] = useState(null);
 
   useEffect(() => {
     fetch('/api/server-info')
@@ -34,6 +40,8 @@ function App() {
       .then(d => { if (d.lanUrl) setLanUrl(d.lanUrl); })
       .catch(() => {});
   }, []);
+
+  useEffect(() => { if (diceRoll) setActiveRoll(diceRoll); }, [diceRoll]);
 
   if (!state) {
     return (
@@ -50,6 +58,11 @@ function App() {
       {state.status === 'setup'
         ? <SetupView socket={socket} state={state} lanUrl={lanUrl} />
         : <ActiveView socket={socket} state={state} lanUrl={lanUrl} />}
+      <DiceNotification
+        roll={activeRoll}
+        players={state.players}
+        onClose={() => setActiveRoll(null)}
+      />
     </div>
   );
 }
@@ -68,17 +81,19 @@ function Header({ connected, lanUrl, socket, state }) {
       </h1>
       <div className="flex items-center gap-2 flex-wrap">
         <code className="text-xs opacity-70 bg-base-300 px-2 py-1 rounded hidden sm:inline">{lanUrl}</code>
-        <div className={`badge badge-lg gap-1 ${connected ? 'badge-success' : 'badge-error'}`}>
-          {connected ? '● Bağlı' : '○ Yok'}
-        </div>
+        <ConnectionBadge connected={connected} />
         <ThemeToggle />
         {state.status === 'active' && (
           <div className="dropdown dropdown-end">
             <label tabIndex={0} className="btn btn-ghost btn-circle" aria-label="Menü">
-              <span className="text-xl">⋮</span>
+              <MoreVertical size={20} />
             </label>
             <ul tabIndex={0} className="menu dropdown-content mt-3 z-[1] p-2 shadow-xl bg-base-200 rounded-box w-52">
-              <li><a onClick={onReset} className="text-error">🔄 Oyunu Sıfırla</a></li>
+              <li>
+                <a onClick={onReset} className="text-error gap-2">
+                  <RotateCcw size={16} /> Oyunu Sıfırla
+                </a>
+              </li>
             </ul>
           </div>
         )}
@@ -217,18 +232,20 @@ function PlayerJoinCard({ player, lanUrl, onRemove }) {
       >
         <span className="font-bold text-sm drop-shadow-sm">{player.name}</span>
         <button
-          className="btn btn-ghost btn-xs text-white hover:bg-white/20"
+          className="btn btn-ghost btn-xs btn-circle text-white hover:bg-white/20"
           onClick={onRemove}
           aria-label="Sil"
-        >✕</button>
+        >
+          <Trash2 size={14} />
+        </button>
       </div>
       <div className="card-body p-3">
         <div className="flex gap-3 items-center">
           <QrCode value={link} size={110} />
           <div className="flex-1 min-w-0">
             <p className="text-xs opacity-60 mb-1">QR'ı tara veya:</p>
-            <button className="btn btn-sm btn-outline w-full" onClick={copy}>
-              {copied ? '✓ Kopyalandı' : '📋 Kopyala'}
+            <button className="btn btn-sm btn-outline w-full gap-1" onClick={copy}>
+              {copied ? <><Check size={14} /> Kopyalandı</> : <><Copy size={14} /> Kopyala</>}
             </button>
           </div>
         </div>
@@ -303,8 +320,8 @@ function QrModal({ player, lanUrl, onClose }) {
           </div>
           <code className="text-xs opacity-60 break-all bg-base-200 px-2 py-1 rounded w-full">{link}</code>
           <div className="flex gap-2 w-full mt-2">
-            <button className="btn btn-outline flex-1" onClick={copy}>
-              {copied ? '✓ Kopyalandı' : '📋 Kopyala'}
+            <button className="btn btn-outline flex-1 gap-1" onClick={copy}>
+              {copied ? <><Check size={16} /> Kopyalandı</> : <><Copy size={16} /> Kopyala</>}
             </button>
             <button className="btn btn-primary flex-1" onClick={onClose}>Kapat</button>
           </div>
@@ -422,7 +439,7 @@ function BankerPlayerCard({ socket, player, state, onShowQr }) {
             title="QR kodu göster"
             aria-label="QR kodu göster"
           >
-            <span className="text-base">📱</span>
+            <QrIcon size={16} />
           </button>
         </div>
       </div>
@@ -441,8 +458,12 @@ function BankerPlayerCard({ socket, player, state, onShowQr }) {
             min="1"
             onKeyDown={(e) => e.key === 'Enter' && adjust(1)}
           />
-          <button className="btn btn-success btn-sm join-item" onClick={() => adjust(1)} title="Para ver">+</button>
-          <button className="btn btn-error btn-sm join-item" onClick={() => adjust(-1)} title="Para al">−</button>
+          <button className="btn btn-success btn-sm join-item gap-1" onClick={() => adjust(1)} title="Para ver">
+            <Plus size={16} /> Ver
+          </button>
+          <button className="btn btn-error btn-sm join-item gap-1" onClick={() => adjust(-1)} title="Para al">
+            <Minus size={16} /> Al
+          </button>
         </div>
         <div className="grid grid-cols-6 gap-1 mt-1">
           {[1, 5, 10, 50, 100, 500].map(n => (
@@ -456,8 +477,8 @@ function BankerPlayerCard({ socket, player, state, onShowQr }) {
             </button>
           ))}
         </div>
-        <button className="btn btn-outline btn-warning btn-block mt-2" onClick={passGo}>
-          🎲 GO Bonusu Ver (+{fmt(state.config.passGoBonus, cur)})
+        <button className="btn btn-outline btn-warning btn-block mt-2 gap-2" onClick={passGo}>
+          <Dices size={18} /> GO Bonusu Ver (+{fmt(state.config.passGoBonus, cur)})
         </button>
       </div>
     </div>

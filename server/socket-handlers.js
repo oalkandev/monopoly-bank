@@ -28,6 +28,15 @@ export function attachSockets(io) {
       }
     };
 
+    socket.on('roll-dice', wrap(async () => {
+      if (!playerId) throw new Error('Sadece oyuncular zar atabilir');
+      const dice = [
+        1 + Math.floor(Math.random() * 6),
+        1 + Math.floor(Math.random() * 6),
+      ];
+      io.emit('dice-rolled', { playerId, dice, ts: Date.now() });
+    }));
+
     socket.on('add-player', wrap(state.addPlayer));
     socket.on('remove-player', wrap(state.removePlayer));
     socket.on('start-game', wrap(state.startGame));

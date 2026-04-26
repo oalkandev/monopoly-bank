@@ -7,6 +7,9 @@ import { emit, describeTx, txDirection, formatRelative } from './socket.js';
 import { ThemeToggle } from './ThemeToggle.jsx';
 import { useTheme } from './useTheme.js';
 import { useSoundSetting, useReceiveSound } from './useReceiveSound.js';
+import { ConnectionBadge } from './ConnectionBadge.jsx';
+import { DiceNotification } from './DiceNotification.jsx';
+import { Send, Building2, Dices, Bell, BellOff } from 'lucide-react';
 import '../index.css';
 
 function getCookie(name) {
@@ -25,7 +28,10 @@ function App() {
 
   if (!cookieToken) return <NoToken />;
 
-  const { socket, state, connected } = useSocket();
+  const { socket, state, connected, diceRoll } = useSocket();
+  const [activeRoll, setActiveRoll] = useState(null);
+
+  useEffect(() => { if (diceRoll) setActiveRoll(diceRoll); }, [diceRoll]);
 
   if (!state) {
     return (
@@ -45,6 +51,11 @@ function App() {
       {state.status === 'setup'
         ? <WaitingView me={me} />
         : <PlayingView socket={socket} state={state} me={me} sound={sound} />}
+      <DiceNotification
+        roll={activeRoll}
+        players={state.players}
+        onClose={() => setActiveRoll(null)}
+      />
     </div>
   );
 }
@@ -53,9 +64,7 @@ function TopBar({ connected, sound }) {
   return (
     <div className="navbar bg-base-200 rounded-box mb-4 min-h-0 py-1 px-3">
       <div className="flex-1">
-        <div className={`badge badge-sm gap-1 ${connected ? 'badge-success' : 'badge-error'}`}>
-          {connected ? '● bağlı' : '○ bağlanılıyor'}
-        </div>
+        <ConnectionBadge connected={connected} size="sm" />
       </div>
       <div className="flex-none gap-1">
         <button
@@ -64,7 +73,7 @@ function TopBar({ connected, sound }) {
           title={sound.enabled ? 'Sesi kapat' : 'Sesi aç'}
           aria-label={sound.enabled ? 'Sesi kapat' : 'Sesi aç'}
         >
-          <span className="text-lg">{sound.enabled ? '🔔' : '🔕'}</span>
+          {sound.enabled ? <Bell size={18} /> : <BellOff size={18} />}
         </button>
         <ThemeToggle size="sm" />
       </div>
@@ -108,9 +117,18 @@ function PlayingView({ socket, state, me, sound }) {
   const otherPlayers = state.players.filter(p => p.id !== me.id);
   const [showSend, setShowSend] = useState(false);
   const [showBank, setShowBank] = useState(false);
+  const [rolling, setRolling] = useState(false);
   const receivedTx = useReceivedNotification(state, me);
 
   useReceiveSound(me.balance, sound.enabled);
+
+  const rollDice = async () => {
+    if (rolling) return;
+    setRolling(true);
+    try { await emit(socket, 'roll-dice'); }
+    catch (e) { toast.error(e.message); }
+    setTimeout(() => setRolling(false), 600);
+  };
 
   return (
     <>
@@ -128,16 +146,26 @@ function PlayingView({ socket, state, me, sound }) {
           <div className="balance-display text-6xl font-black my-2 text-primary">
             {fmt(me.balance, cur)}
           </div>
+          <button
+            className="btn btn-secondary btn-lg btn-block gap-2"
+            onClick={rollDice}
+            disabled={rolling}
+          >
+            <Dices size={22} className={rolling ? 'animate-spin' : ''} />
+            {rolling ? 'Atılıyor…' : 'Zar At'}
+          </button>
           <div className="grid grid-cols-2 gap-2 w-full">
             <button
-              className="btn btn-primary btn-lg"
+              className="btn btn-primary gap-2"
               onClick={() => setShowSend(true)}
               disabled={otherPlayers.length === 0}
             >
-              💸 Para Gönder
+              <Send size={18} />
+              Para Gönder
             </button>
-            <button className="btn btn-accent btn-lg" onClick={() => setShowBank(true)}>
-              🏦 Bankaya Öde
+            <button className="btn btn-accent gap-2" onClick={() => setShowBank(true)}>
+              <Building2 size={18} />
+              Bankaya Öde
             </button>
           </div>
         </div>
