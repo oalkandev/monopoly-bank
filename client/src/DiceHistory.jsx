@@ -2,14 +2,11 @@ import { Dices } from 'lucide-react';
 import { formatRelative } from './socket.js';
 
 const DICE_FACES = ['', '⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
-const VISIBLE_ROWS = 5;
-const ROW_HEIGHT_PX = 52;
 
-// Sadece liste içeriği — başlık yok, üst karta gömülmek için
-export function DiceList({ state }) {
+// İşlemler tabıyla aynı yükseklik kısıtı; çağıran ekran tailwind class geçer
+export function DiceList({ state, maxHeightClass = 'max-h-80' }) {
   const all = state.diceRolls ?? [];
   const rolls = [...all].reverse();
-  const scroll = rolls.length > VISIBLE_ROWS;
 
   if (rolls.length === 0) {
     return (
@@ -21,10 +18,7 @@ export function DiceList({ state }) {
   }
 
   return (
-    <ul
-      className="space-y-1.5 mt-3 overflow-y-auto pr-1"
-      style={scroll ? { maxHeight: `${VISIBLE_ROWS * ROW_HEIGHT_PX}px` } : undefined}
-    >
+    <ul className={`space-y-1.5 mt-3 overflow-y-auto pr-1 ${maxHeightClass}`}>
       {rolls.map((r) => {
         const player = state.players.find((p) => p.id === r.playerId);
         const total = r.dice[0] + r.dice[1];
@@ -56,7 +50,6 @@ export function DiceList({ state }) {
   );
 }
 
-// Geriye dönük uyumluluk: kendi başına kart olarak da kullanılabilir
 export function DiceHistory({ state }) {
   const count = state.diceRolls?.length ?? 0;
   return (

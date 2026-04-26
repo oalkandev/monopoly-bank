@@ -558,7 +558,7 @@ function HistoryCard({ socket, state }) {
             )}
           </>
         ) : (
-          <DiceList state={state} />
+          <DiceList state={state} maxHeightClass="max-h-[65vh]" />
         )}
       </div>
     </div>
