@@ -180,7 +180,7 @@ function PlayingView({ socket, state, me, sound }) {
 
       <PlayerList state={state} me={me} />
       <TransactionFeed state={state} me={me} />
-      <DiceHistory state={state} limit={5} />
+      <DiceHistory state={state} />
 
       <SendModal
         open={showSend}

@@ -282,7 +282,7 @@ function ActiveView({ socket, state, lanUrl }) {
         </div>
         <div className="lg:col-span-1">
           <TransactionFeed socket={socket} state={state} />
-          <DiceHistory state={state} limit={5} />
+          <DiceHistory state={state} />
         </div>
       </div>
       {qrPlayer && (

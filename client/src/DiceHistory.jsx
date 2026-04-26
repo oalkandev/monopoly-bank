@@ -3,8 +3,14 @@ import { formatRelative } from './socket.js';
 
 const DICE_FACES = ['', '⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
 
-export function DiceHistory({ state, limit = 5 }) {
-  const rolls = [...(state.diceRolls ?? [])].slice(-limit).reverse();
+// 5 satır görünür, fazlası scroll ile
+const VISIBLE_ROWS = 5;
+const ROW_HEIGHT_PX = 52;
+
+export function DiceHistory({ state }) {
+  const all = state.diceRolls ?? [];
+  const rolls = [...all].reverse();
+  const scroll = rolls.length > VISIBLE_ROWS;
 
   return (
     <div className="card bg-base-200 shadow-md mb-4">
@@ -13,12 +19,15 @@ export function DiceHistory({ state, limit = 5 }) {
           <h3 className="font-bold text-sm opacity-70 uppercase tracking-wide flex items-center gap-2">
             <Dices size={16} /> Zar Geçmişi
           </h3>
-          <span className="badge badge-ghost badge-sm">{state.diceRolls?.length ?? 0}</span>
+          <span className="badge badge-ghost badge-sm">{all.length}</span>
         </div>
         {rolls.length === 0 ? (
           <div className="text-center py-4 opacity-50 text-sm">Henüz zar atılmadı</div>
         ) : (
-          <ul className="space-y-1.5 mt-2">
+          <ul
+            className="space-y-1.5 mt-2 overflow-y-auto pr-1"
+            style={scroll ? { maxHeight: `${VISIBLE_ROWS * ROW_HEIGHT_PX}px` } : undefined}
+          >
             {rolls.map((r) => {
               const player = state.players.find((p) => p.id === r.playerId);
               const total = r.dice[0] + r.dice[1];
