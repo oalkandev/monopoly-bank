@@ -38,7 +38,7 @@ i18n
     fallbackLng: {
       'pt-PT': ['pt-BR', 'en'],
       'pt': ['pt-BR', 'en'],
-      'default': ['tr', 'en'],
+      'default': ['en'],
     },
     supportedLngs: ['tr', 'en', 'es', 'de', 'fr', 'it', 'pt-BR', 'pt'],
     nonExplicitSupportedLngs: true,
