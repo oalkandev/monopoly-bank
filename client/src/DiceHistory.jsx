@@ -35,8 +35,10 @@ export function DiceHistory({ state, limit = 5 }) {
                   >
                     {player?.name ?? 'Bilinmeyen'}
                   </span>
-                  <span className="text-2xl leading-none select-none" title={`${r.dice[0]} + ${r.dice[1]}`}>
-                    {DICE_FACES[r.dice[0]]}{DICE_FACES[r.dice[1]]}
+                  <span className="flex items-center gap-1 select-none" title={`${r.dice[0]} + ${r.dice[1]}`}>
+                    <span className="text-3xl leading-none">{DICE_FACES[r.dice[0]]}</span>
+                    <span className="text-base opacity-50 font-bold">+</span>
+                    <span className="text-3xl leading-none">{DICE_FACES[r.dice[1]]}</span>
                   </span>
                   <span className="balance-display font-black text-base w-7 text-right">{total}</span>
                   {isDouble && <span className="badge badge-warning badge-xs">çift</span>}
