@@ -242,16 +242,13 @@ function PlayerJoinCard({ player, lanUrl, onRemove }) {
           <Trash2 size={14} />
         </button>
       </div>
-      <div className="card-body p-3">
-        <div className="flex gap-3 items-center">
-          <QrCode value={link} size={110} />
-          <div className="flex-1 min-w-0">
-            <p className="text-xs opacity-60 mb-1">QR'ı tara veya:</p>
-            <button className="btn btn-sm btn-outline w-full gap-1" onClick={copy}>
-              {copied ? <><Check size={14} /> Kopyalandı</> : <><Copy size={14} /> Kopyala</>}
-            </button>
-          </div>
+      <div className="card-body p-3 items-center">
+        <div className="bg-white p-2 rounded-lg">
+          <QrCode value={link} size={200} />
         </div>
+        <button className="btn btn-xs btn-ghost gap-1 mt-1" onClick={copy}>
+          {copied ? <><Check size={12} /> Kopyalandı</> : <><Copy size={12} /> Linki kopyala</>}
+        </button>
       </div>
     </div>
   );
