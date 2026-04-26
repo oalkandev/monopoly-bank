@@ -58,7 +58,7 @@ test('startGame özel başlangıç parası kullanır', () => {
 test('startGame 2 oyuncudan az ile reddeder', () => {
   let s = createInitialState();
   s = addPlayer(s, { name: 'A', color: '#f00' });
-  assert.throws(() => startGame(s), /en az 2/i);
+  assert.throws(() => startGame(s), /errors\.minTwoPlayers/);
 });
 
 test('applyTransfer bakiyeleri günceller', () => {
@@ -75,22 +75,22 @@ test('applyTransfer yetersiz bakiyede hata atar', () => {
   const [a, b] = s.players;
   assert.throws(
     () => applyTransfer(s, { fromId: a.id, toId: b.id, amount: 9999 }),
-    /yetersiz bakiye/i
+    /errors\.insufficientBalance/
   );
 });
 
 test('applyTransfer geçersiz miktarı reddeder', () => {
   const s = setup();
   const [a, b] = s.players;
-  assert.throws(() => applyTransfer(s, { fromId: a.id, toId: b.id, amount: 0 }), /geçersiz/i);
-  assert.throws(() => applyTransfer(s, { fromId: a.id, toId: b.id, amount: -10 }), /geçersiz/i);
-  assert.throws(() => applyTransfer(s, { fromId: a.id, toId: b.id, amount: NaN }), /geçersiz/i);
+  assert.throws(() => applyTransfer(s, { fromId: a.id, toId: b.id, amount: 0 }), /errors\.invalidAmount/);
+  assert.throws(() => applyTransfer(s, { fromId: a.id, toId: b.id, amount: -10 }), /errors\.invalidAmount/);
+  assert.throws(() => applyTransfer(s, { fromId: a.id, toId: b.id, amount: NaN }), /errors\.invalidAmount/);
 });
 
 test('applyTransfer aynı kişiye gönderimi reddeder', () => {
   const s = setup();
   const [a] = s.players;
-  assert.throws(() => applyTransfer(s, { fromId: a.id, toId: a.id, amount: 10 }), /aynı/i);
+  assert.throws(() => applyTransfer(s, { fromId: a.id, toId: a.id, amount: 10 }), /errors\.transferSelf/);
 });
 
 test('applyPassGo bonus ekler', () => {
@@ -117,7 +117,7 @@ test('applyBankerAdjust bakiye eksiye düşmesini engeller', () => {
   const [a] = s.players;
   assert.throws(
     () => applyBankerAdjust(s, { playerId: a.id, amount: -2000 }),
-    /yetersiz/i
+    /errors\.insufficientBalance/
   );
 });
 
@@ -138,7 +138,7 @@ test('undoTransaction iki kez aynı işlemi geri alamaz', () => {
   s = applyTransfer(s, { fromId: a.id, toId: b.id, amount: 200 });
   const txId = s.transactions.at(-1).id;
   s = undoTransaction(s, { transactionId: txId });
-  assert.throws(() => undoTransaction(s, { transactionId: txId }), /zaten/i);
+  assert.throws(() => undoTransaction(s, { transactionId: txId }), /errors\.alreadyUndone/);
 });
 
 test('undoTransaction pass-go işlemini geri alır', () => {

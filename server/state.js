@@ -27,6 +27,12 @@ export async function addPlayer(payload) {
   await commit(logic.addPlayer(state, payload));
 }
 
+export async function addDiceRoll(roll) {
+  const existing = state.diceRolls ?? [];
+  const next = [...existing, roll].slice(-50);
+  await commit({ ...state, diceRolls: next });
+}
+
 export async function removePlayer(payload) {
   await commit(logic.removePlayer(state, payload));
 }
@@ -41,12 +47,21 @@ export async function updateConfig(patch) {
   if (Number.isFinite(patch?.passGoBonus) && patch.passGoBonus >= 0) allowed.passGoBonus = patch.passGoBonus;
   if (Number.isFinite(patch?.startingBalance) && patch.startingBalance > 0) allowed.startingBalance = patch.startingBalance;
   if (typeof patch?.currency === 'string' && patch.currency.length <= 5) allowed.currency = patch.currency;
+  if (Array.isArray(patch?.quickAmounts)) {
+    const cleaned = [...new Set(
+      patch.quickAmounts
+        .map(Number)
+        .filter(n => Number.isFinite(n) && n > 0)
+        .map(n => Math.floor(n))
+    )].sort((a, b) => a - b);
+    if (cleaned.length > 0 && cleaned.length <= 12) allowed.quickAmounts = cleaned;
+  }
   await commit({ ...state, config: { ...state.config, ...allowed } });
 }
 
 export async function payToBank(payload) {
   const { playerId, amount } = payload;
-  if (!Number.isFinite(amount) || amount <= 0) throw new Error('Geçersiz miktar');
+  if (!Number.isFinite(amount) || amount <= 0) throw new Error('errors.invalidAmount');
   await commit(logic.applyBankerAdjust(state, { playerId, amount: -amount }));
 }
 

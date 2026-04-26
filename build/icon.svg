@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <linearGradient id="bg2" x1="0" y1="0" x2="0" y2="1024" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#dc2626"/>
+      <stop offset="100%" stop-color="#991b1b"/>
+    </linearGradient>
+    <radialGradient id="shine2" cx="0.3" cy="0.25" r="0.7">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="hatGrad" x1="0" y1="280" x2="0" y2="800" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#1f2937"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </linearGradient>
+    <linearGradient id="hatShine" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.0"/>
+      <stop offset="40%" stop-color="#ffffff" stop-opacity="0.12"/>
+      <stop offset="60%" stop-color="#ffffff" stop-opacity="0.0"/>
+    </linearGradient>
+    <filter id="hatShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="10"/>
+      <feOffset dx="0" dy="14" result="shadow"/>
+      <feFlood flood-color="#000000" flood-opacity="0.35"/>
+      <feComposite in2="shadow" operator="in"/>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Squircle background -->
+  <rect x="0" y="0" width="1024" height="1024" rx="229" ry="229" fill="url(#bg2)"/>
+  <rect x="0" y="0" width="1024" height="1024" rx="229" ry="229" fill="url(#shine2)"/>
+
+  <!-- Top hat -->
+  <g filter="url(#hatShadow)">
+    <!-- Brim (geniş elips) -->
+    <ellipse cx="512" cy="780" rx="350" ry="40" fill="url(#hatGrad)"/>
+    <!-- Crown body -->
+    <path d="
+      M 332 290
+      Q 332 260 362 260
+      L 662 260
+      Q 692 260 692 290
+      L 692 760
+      Q 692 770 682 770
+      L 342 770
+      Q 332 770 332 760
+      Z
+    " fill="url(#hatGrad)"/>
+    <!-- Crown shine strip -->
+    <rect x="332" y="290" width="360" height="490" fill="url(#hatShine)" opacity="0.8"/>
+    <!-- Band -->
+    <rect x="332" y="640" width="360" height="58" fill="#fef3c7"/>
+    <rect x="332" y="640" width="360" height="58" fill="none" stroke="#fbbf24" stroke-width="3" opacity="0.6"/>
+    <!-- ₺ on band -->
+    <g fill="#1e293b">
+      <rect x="486" y="650" width="40" height="38" rx="6"/>
+      <rect x="466" y="650" width="80" height="14" rx="4"/>
+      <rect x="476" y="668" width="60" height="6" rx="2"/>
+      <rect x="476" y="680" width="60" height="6" rx="2"/>
+    </g>
+  </g>
+</svg>

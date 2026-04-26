@@ -63,3 +63,14 @@ body {
 @media (min-width: 640px) {
   .modal-slide-in { animation: modalScaleIn 180ms ease-out both; }
 }
+
+/* Dice rolling shake/wobble */
+@keyframes diceRoll {
+  0%   { transform: rotate(0deg) scale(1); }
+  20%  { transform: rotate(-12deg) scale(1.06); }
+  40%  { transform: rotate(10deg)  scale(0.96); }
+  60%  { transform: rotate(-8deg)  scale(1.04); }
+  80%  { transform: rotate(6deg)   scale(0.98); }
+  100% { transform: rotate(0deg) scale(1); }
+}
+.die-rolling { animation: diceRoll 0.7s ease-in-out; }

@@ -1,8 +1,17 @@
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 
-const FILE = path.resolve('game-state.json');
-const TMP = `${FILE}.tmp`;
+let FILE = path.resolve('game-state.json');
+let TMP = `${FILE}.tmp`;
+
+export function setFile(absolutePath) {
+  FILE = absolutePath;
+  TMP = `${FILE}.tmp`;
+}
+
+export function getFile() {
+  return FILE;
+}
 
 export async function load() {
   try {
@@ -17,6 +26,7 @@ export async function load() {
 let writeQueue = Promise.resolve();
 export function save(state) {
   writeQueue = writeQueue.then(async () => {
+    await fs.mkdir(path.dirname(FILE), { recursive: true });
     await fs.writeFile(TMP, JSON.stringify(state, null, 2));
     await fs.rename(TMP, FILE);
   });

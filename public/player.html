@@ -11,13 +11,15 @@
         if (t === 'monopoly-light' || t === 'monopoly-dark') {
           document.documentElement.dataset.theme = t;
         }
+        var l = localStorage.getItem('monopoly-lang');
+        if (l) document.documentElement.lang = l;
       } catch (e) {}
     })();
   </script>
-  <script type="module" crossorigin src="/assets/player-ByUdy3BS.js"></script>
-  <link rel="modulepreload" crossorigin href="/assets/index-Hs1UxlpX.js">
-  <link rel="modulepreload" crossorigin href="/assets/ThemeToggle-Kl0EOKAG.js">
-  <link rel="stylesheet" crossorigin href="/assets/index-DUhjKarY.css">
+  <script type="module" crossorigin src="/assets/player-D9amRCOk.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/index-JZZbU7U5.js">
+  <link rel="modulepreload" crossorigin href="/assets/LanguageSwitcher-CyKUsJAY.js">
+  <link rel="stylesheet" crossorigin href="/assets/index-Bz0Hx9JA.css">
 </head>
 <body>
   <div id="root"></div>

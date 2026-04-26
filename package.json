@@ -1,29 +1,121 @@
 {
   "name": "monopoly-bank",
   "version": "1.0.0",
+  "description": "Local network Monopoly money manager — banker on desktop, players on phones",
+  "author": "Monopoly Bank",
   "type": "module",
+  "main": "electron/main.cjs",
   "scripts": {
     "start": "node server.js",
     "dev:client": "vite",
     "build": "vite build",
-    "test": "node --test tests/*.test.js"
+    "test": "node --test tests/*.test.js",
+    "electron": "npm run build && electron .",
+    "electron:dev": "electron .",
+    "dist": "npm run build && electron-builder",
+    "dist:mac": "npm run build && electron-builder --mac",
+    "dist:win": "npm run build && electron-builder --win",
+    "dist:linux": "npm run build && electron-builder --linux"
   },
   "dependencies": {
     "express": "^4.19.2",
-    "socket.io": "^4.7.5",
-    "qrcode-terminal": "^0.12.0"
+    "i18next": "^26.0.8",
+    "i18next-browser-languagedetector": "^8.2.1",
+    "lucide-react": "^1.11.0",
+    "qrcode-terminal": "^0.12.0",
+    "react-i18next": "^17.0.4",
+    "socket.io": "^4.7.5"
   },
   "devDependencies": {
-    "vite": "^5.4.10",
     "@vitejs/plugin-react": "^4.3.3",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "socket.io-client": "^4.7.5",
-    "qrcode": "^1.5.4",
-    "tailwindcss": "^3.4.14",
-    "postcss": "^8.4.47",
     "autoprefixer": "^10.4.20",
     "daisyui": "^4.12.14",
-    "react-hot-toast": "^2.4.1"
+    "electron": "^33.0.2",
+    "electron-builder": "^25.1.8",
+    "png-to-ico": "^3.0.1",
+    "postcss": "^8.4.47",
+    "qrcode": "^1.5.4",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-hot-toast": "^2.4.1",
+    "sharp": "^0.34.5",
+    "socket.io-client": "^4.7.5",
+    "tailwindcss": "^3.4.14",
+    "vite": "^5.4.10"
+  },
+  "build": {
+    "appId": "com.monopolybank.app",
+    "productName": "Monopoly Bank",
+    "asar": true,
+    "asarUnpack": [
+      "server.js",
+      "server/**",
+      "node_modules/socket.io/**",
+      "node_modules/socket.io-adapter/**",
+      "node_modules/engine.io/**",
+      "node_modules/engine.io-parser/**",
+      "node_modules/ws/**",
+      "node_modules/qrcode-terminal/**"
+    ],
+    "files": [
+      "electron/**",
+      "server.js",
+      "server/**",
+      "package.json",
+      "!**/node_modules/*/{CHANGELOG.md,README.md,README,readme.md,readme}",
+      "!**/node_modules/*/{test,__tests__,tests,powered-test,example,examples}",
+      "!**/node_modules/*.d.ts",
+      "!**/node_modules/.bin",
+      "!**/{.DS_Store,.git,.idea,.vscode,*.log}"
+    ],
+    "extraResources": [
+      {
+        "from": "public",
+        "to": "public",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
+    "directories": {
+      "output": "dist-electron",
+      "buildResources": "build"
+    },
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ],
+      "category": "public.app-category.entertainment",
+      "hardenedRuntime": false,
+      "gatekeeperAssess": false,
+      "identity": null
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "linux": {
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "category": "Game"
+    }
   }
 }

@@ -1,4 +1,5 @@
 import { io } from 'socket.io-client';
+import i18n from './i18n.js';
 
 function getCookie(name) {
   return document.cookie.split('; ').find(c => c.startsWith(name + '='))?.split('=')[1];
@@ -14,20 +15,36 @@ export function createSocket({ role } = {}) {
 export function emit(socket, event, payload) {
   return new Promise((resolve, reject) => {
     socket.emit(event, payload, (ack) => {
-      if (ack?.ok) resolve(ack);
-      else reject(new Error(ack?.error ?? 'Bilinmeyen hata'));
+      if (ack?.ok) {
+        resolve(ack);
+      } else {
+        // Sunucu hata mesajını ya bir i18n key (ör. "errors.insufficientBalance")
+        // ya da olduğu gibi bir metin gönderir. t() key'i çevirir, key değilse aynısını döndürür.
+        const raw = ack?.error ?? 'errors.unknownError';
+        const translated = i18n.t(raw);
+        reject(new Error(translated));
+      }
     });
   });
 }
 
+const TX_LABELS = {
+  transfer: 'history.tx.transfer',
+  'pass-go': 'history.tx.passGo',
+  'banker-credit': 'history.tx.bankerCredit',
+  'banker-debit': 'history.tx.bankerDebit',
+  initial: 'history.tx.initial',
+};
+
 export function describeTx(t, players) {
   const name = (id) => players.find(p => p.id === id)?.name ?? '?';
+  const bank = i18n.t('common.bank');
   switch (t.type) {
-    case 'transfer': return `${name(t.from)} → ${name(t.to)}`;
-    case 'pass-go': return `Banka → ${name(t.to)} (GO)`;
-    case 'banker-credit': return `Banka → ${name(t.to)}`;
-    case 'banker-debit': return `${name(t.from)} → Banka`;
-    case 'initial': return `Başlangıç → ${name(t.to)}`;
+    case 'transfer':       return `${name(t.from)} → ${name(t.to)}`;
+    case 'pass-go':        return `${bank} → ${name(t.to)} (${i18n.t('history.tx.passGo')})`;
+    case 'banker-credit':  return `${bank} → ${name(t.to)}`;
+    case 'banker-debit':   return `${name(t.from)} → ${bank}`;
+    case 'initial':        return `${i18n.t('history.tx.initial')} → ${name(t.to)}`;
     default: return t.type;
   }
 }
@@ -39,15 +56,23 @@ export function txDirection(t, meId) {
   return 'neutral';
 }
 
+export const DEFAULT_QUICK_AMOUNTS = [1, 5, 10, 50, 100, 500];
+
+export function getQuickAmounts(state) {
+  const arr = state?.config?.quickAmounts;
+  if (Array.isArray(arr) && arr.length > 0) return arr;
+  return DEFAULT_QUICK_AMOUNTS;
+}
+
 export function formatRelative(ts) {
   const diff = Math.max(0, Date.now() - ts);
   const sec = Math.floor(diff / 1000);
-  if (sec < 10) return 'şimdi';
-  if (sec < 60) return `${sec}s önce`;
+  if (sec < 10) return i18n.t('common.now');
+  if (sec < 60) return i18n.t('common.secondsAgo', { n: sec });
   const min = Math.floor(sec / 60);
-  if (min < 60) return `${min}dk önce`;
+  if (min < 60) return i18n.t('common.minutesAgo', { n: min });
   const hr = Math.floor(min / 60);
-  if (hr < 24) return `${hr}sa önce`;
+  if (hr < 24) return i18n.t('common.hoursAgo', { n: hr });
   const day = Math.floor(hr / 24);
-  return `${day}g önce`;
+  return i18n.t('common.daysAgo', { n: day });
 }

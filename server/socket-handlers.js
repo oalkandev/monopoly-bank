@@ -28,21 +28,36 @@ export function attachSockets(io) {
       }
     };
 
+    socket.on('roll-dice', wrap(async () => {
+      if (!playerId) throw new Error('errors.rollDiceOnly');
+      const roll = {
+        id: 'd_' + Math.random().toString(36).slice(2, 10),
+        playerId,
+        dice: [
+          1 + Math.floor(Math.random() * 6),
+          1 + Math.floor(Math.random() * 6),
+        ],
+        ts: Date.now(),
+      };
+      await state.addDiceRoll(roll);
+      io.emit('dice-rolled', roll);
+    }));
+
     socket.on('add-player', wrap(state.addPlayer));
     socket.on('remove-player', wrap(state.removePlayer));
     socket.on('start-game', wrap(state.startGame));
     socket.on('update-config', wrap(state.updateConfig));
     socket.on('pay-to-bank', wrap(async (p) => {
-      if (!playerId && role !== 'banker') throw new Error('Yetkisiz');
+      if (!playerId && role !== 'banker') throw new Error('errors.unauthorized');
       await state.payToBank({ playerId: playerId ?? p.playerId, amount: p.amount });
     }));
     socket.on('transfer', wrap(async (p) => {
-      if (!playerId && role !== 'banker') throw new Error('Yetkisiz');
+      if (!playerId && role !== 'banker') throw new Error('errors.unauthorized');
       await state.transfer({ ...p, fromId: playerId ?? p.fromId });
     }));
     socket.on('pass-go', wrap(async (p) => {
-      if (role !== 'banker') throw new Error('Sadece bankacı GO bonusu verebilir');
-      if (!p?.playerId) throw new Error('playerId gerekli');
+      if (role !== 'banker') throw new Error('errors.passGoBankerOnly');
+      if (!p?.playerId) throw new Error('errors.playerIdRequired');
       await state.passGo({ playerId: p.playerId });
     }));
     socket.on('banker-adjust', wrap(state.bankerAdjust));
