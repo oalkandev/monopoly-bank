@@ -11,6 +11,7 @@ import { DiceNotification } from './DiceNotification.jsx';
 import { copyText } from './clipboard.js';
 import {
   QrCode as QrIcon, Dices, Plus, Minus, RotateCcw, MoreVertical, Trash2, Copy, Check, Pencil,
+  Settings, UserPlus, Users, PlayCircle,
 } from 'lucide-react';
 import '../index.css';
 
@@ -140,7 +141,7 @@ function SetupView({ socket, state, lanUrl }) {
       <div className="lg:col-span-1 space-y-4">
         <div className="card bg-base-200 shadow-md">
           <div className="card-body">
-            <h2 className="card-title text-base">⚙️ Ayarlar</h2>
+            <h2 className="card-title text-base gap-2"><Settings size={18} /> Ayarlar</h2>
             <label className="form-control">
               <div className="label py-1"><span className="label-text">Başlangıç Parası</span></div>
               <input type="number" className="input input-bordered" value={startingBalance}
@@ -156,7 +157,7 @@ function SetupView({ socket, state, lanUrl }) {
 
         <div className="card bg-base-200 shadow-md">
           <div className="card-body">
-            <h2 className="card-title text-base">➕ Oyuncu Ekle</h2>
+            <h2 className="card-title text-base gap-2"><UserPlus size={18} /> Oyuncu Ekle</h2>
             <input
               className="input input-bordered"
               placeholder="Oyuncu adı"
@@ -175,16 +176,19 @@ function SetupView({ socket, state, lanUrl }) {
                 />
               ))}
             </div>
-            <button className="btn btn-primary mt-2" onClick={addPlayer}>+ Ekle</button>
+            <button className="btn btn-primary mt-2 gap-2" onClick={addPlayer}>
+              <UserPlus size={18} /> Ekle
+            </button>
           </div>
         </div>
 
         <button
-          className="btn btn-success btn-lg w-full"
+          className="btn btn-success btn-lg w-full gap-2"
           disabled={state.players.length < 2}
           onClick={startGame}
         >
-          🎲 Oyunu Başlat
+          <PlayCircle size={22} />
+          Oyunu Başlat
           {state.players.length < 2 && ` (${state.players.length}/2)`}
         </button>
       </div>
@@ -192,7 +196,7 @@ function SetupView({ socket, state, lanUrl }) {
       <div className="lg:col-span-2">
         <div className="card bg-base-200 shadow-md">
           <div className="card-body">
-            <h2 className="card-title text-base">👥 Oyuncular ({state.players.length})</h2>
+            <h2 className="card-title text-base gap-2"><Users size={18} /> Oyuncular ({state.players.length})</h2>
             {state.players.length === 0 && (
               <div className="alert alert-info mt-2">
                 <span>İlk oyuncuyu ekleyin. En az 2 oyuncu gerekiyor.</span>
