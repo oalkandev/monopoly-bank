@@ -32,10 +32,17 @@ i18n
       fr: { translation: fr },
       it: { translation: it },
       'pt-BR': { translation: ptBR },
+      // pt-PT veya sadece 'pt' yakalansın
+      pt: { translation: ptBR },
     },
-    fallbackLng: 'en',
-    supportedLngs: SUPPORTED_LANGUAGES.map(l => l.code),
+    fallbackLng: {
+      'pt-PT': ['pt-BR', 'en'],
+      'pt': ['pt-BR', 'en'],
+      'default': ['tr', 'en'],
+    },
+    supportedLngs: ['tr', 'en', 'es', 'de', 'fr', 'it', 'pt-BR', 'pt'],
     nonExplicitSupportedLngs: true,
+    load: 'currentOnly',
     detection: {
       order: ['localStorage', 'navigator'],
       caches: ['localStorage'],
