@@ -184,22 +184,27 @@ function SetupView({ socket, state, lanUrl }) {
                   Varsayılana dön
                 </button>
               </div>
-              <div className="flex flex-wrap gap-1.5">
+
+              <div className="grid grid-cols-3 gap-2">
                 {quickAmounts.map(n => (
-                  <span key={n} className="badge badge-outline badge-lg gap-1.5">
-                    +{n}
+                  <div
+                    key={n}
+                    className="h-12 rounded-lg border border-base-content/20 bg-base-100/40 flex items-center justify-between px-3"
+                  >
+                    <span className="font-bold balance-display">+{n}</span>
                     <button
                       type="button"
-                      className="opacity-60 hover:opacity-100 hover:text-error"
+                      className="btn btn-ghost btn-xs btn-circle text-error/70 hover:text-error"
                       onClick={() => removeQuickAmount(n)}
                       aria-label={`${n} tutarını sil`}
                     >
-                      <Trash2 size={12} />
+                      <Trash2 size={16} />
                     </button>
-                  </span>
+                  </div>
                 ))}
               </div>
-              <div className="join mt-2">
+
+              <div className="join mt-3">
                 <input
                   type="number"
                   inputMode="numeric"
