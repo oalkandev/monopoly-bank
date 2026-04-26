@@ -9,6 +9,7 @@ import { useTheme } from './useTheme.js';
 import { ConnectionBadge } from './ConnectionBadge.jsx';
 import { DiceNotification } from './DiceNotification.jsx';
 import { DiceList } from './DiceHistory.jsx';
+import { GameTimer } from './GameTimer.jsx';
 import { copyText } from './clipboard.js';
 import {
   QrCode as QrIcon, Dices, Plus, Minus, RotateCcw, MoreVertical, Trash2, Copy, Check, Pencil,
@@ -105,32 +106,6 @@ function Header({ connected, lanUrl, socket, state }) {
           </div>
         )}
       </div>
-    </div>
-  );
-}
-
-function GameTimer({ startedAt }) {
-  const [now, setNow] = useState(() => Date.now());
-  useEffect(() => {
-    const id = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(id);
-  }, []);
-
-  const totalSec = Math.max(0, Math.floor((now - startedAt) / 1000));
-  const hh = Math.floor(totalSec / 3600);
-  const mm = Math.floor((totalSec % 3600) / 60);
-  const ss = totalSec % 60;
-  const text = hh > 0
-    ? `${hh}:${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}`
-    : `${mm}:${String(ss).padStart(2, '0')}`;
-
-  return (
-    <div
-      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-base-300/60 text-xs font-medium balance-display"
-      title="Oyun süresi"
-    >
-      <Clock size={14} className="opacity-80" />
-      <span>{text}</span>
     </div>
   );
 }

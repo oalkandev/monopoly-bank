@@ -10,6 +10,7 @@ import { useSoundSetting, useReceiveSound } from './useReceiveSound.js';
 import { ConnectionBadge } from './ConnectionBadge.jsx';
 import { DiceNotification } from './DiceNotification.jsx';
 import { DiceList } from './DiceHistory.jsx';
+import { GameTimer } from './GameTimer.jsx';
 import {
   Send, Building2, Dices, Bell, BellOff, Users,
   Receipt, ArrowLeftRight, ArrowDownToLine, ArrowUpFromLine, Flag, Building,
@@ -51,7 +52,7 @@ function App() {
   return (
     <div className="min-h-screen p-4 max-w-md mx-auto">
       <Toaster position="top-center" toastOptions={{ duration: 2000 }} />
-      <TopBar connected={connected} sound={sound} />
+      <TopBar connected={connected} sound={sound} state={state} />
       {state.status === 'setup'
         ? <WaitingView me={me} />
         : <PlayingView socket={socket} state={state} me={me} sound={sound} />}
@@ -65,11 +66,14 @@ function App() {
   );
 }
 
-function TopBar({ connected, sound }) {
+function TopBar({ connected, sound, state }) {
+  const startedAt = state?.startedAt ?? state?.transactions?.[0]?.ts;
+  const isActive = state?.status === 'active';
   return (
     <div className="navbar bg-base-200 rounded-box mb-4 min-h-0 py-1 px-3">
-      <div className="flex-1">
+      <div className="flex-1 flex items-center gap-2">
         <ConnectionBadge connected={connected} size="sm" />
+        {isActive && startedAt && <GameTimer startedAt={startedAt} size="sm" />}
       </div>
       <div className="flex-none gap-1">
         <button
