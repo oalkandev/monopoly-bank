@@ -11,7 +11,7 @@ import { ConnectionBadge } from './ConnectionBadge.jsx';
 import { DiceNotification } from './DiceNotification.jsx';
 import { DiceList } from './DiceHistory.jsx';
 import {
-  Send, Building2, Dices, Bell, BellOff,
+  Send, Building2, Dices, Bell, BellOff, Users,
   Receipt, ArrowLeftRight, ArrowDownToLine, ArrowUpFromLine, Flag, Building,
 } from 'lucide-react';
 import '../index.css';
@@ -444,18 +444,28 @@ function SendModal({ open, socket, state, me, others, onClose }) {
     }
   }, [open]);
 
-  const recipient = others.find(p => p.id === toId);
+  const isAll = toId === '__all__';
+  const recipient = isAll ? null : others.find(p => p.id === toId);
   const numAmount = Number(amount) || 0;
-  const exceeds = numAmount > me.balance;
-  const remaining = me.balance - numAmount;
-  const canSend = recipient && numAmount > 0 && !exceeds && !busy;
+  const totalCost = isAll ? numAmount * others.length : numAmount;
+  const exceeds = totalCost > me.balance;
+  const remaining = me.balance - totalCost;
+  const hasSelection = isAll || !!recipient;
+  const canSend = hasSelection && numAmount > 0 && !exceeds && !busy && (!isAll || others.length > 0);
 
   const send = async () => {
     if (!canSend) return;
     setBusy(true);
     try {
-      await emit(socket, 'transfer', { toId, amount: numAmount });
-      toast.success(`${recipient.name}'e ${fmt(numAmount, cur)} gönderildi`);
+      if (isAll) {
+        for (const p of others) {
+          await emit(socket, 'transfer', { toId: p.id, amount: numAmount });
+        }
+        toast.success(`${others.length} oyuncuya ${fmt(numAmount, cur)} gönderildi (toplam ${fmt(totalCost, cur)})`);
+      } else {
+        await emit(socket, 'transfer', { toId, amount: numAmount });
+        toast.success(`${recipient.name}'e ${fmt(numAmount, cur)} gönderildi`);
+      }
       onClose();
     } catch (e) { toast.error(e.message); } finally { setBusy(false); }
   };
@@ -472,12 +482,31 @@ function SendModal({ open, socket, state, me, others, onClose }) {
       <div className="form-control w-full">
         <div className="label py-1">
           <span className="label-text font-semibold">Alıcı</span>
+          {isAll && (
+            <span className="label-text-alt text-xs text-secondary">
+              ✓ Tüm oyuncular ({others.length})
+            </span>
+          )}
           {recipient && (
             <span className="label-text-alt text-xs" style={{ color: recipient.color }}>
               ✓ {recipient.name} seçildi
             </span>
           )}
         </div>
+
+        {/* Herkese gönder kartı */}
+        <button
+          type="button"
+          onClick={() => setToId('__all__')}
+          className={`w-full mb-2 rounded-xl border-2 px-4 py-3 flex items-center gap-3 transition-all text-left ${isAll ? 'shadow-lg scale-[1.01] bg-secondary text-secondary-content border-secondary' : 'opacity-70 hover:opacity-100 active:scale-95 border-dashed border-secondary'}`}
+        >
+          <Users size={22} className="shrink-0" />
+          <div className="flex-1 min-w-0">
+            <div className="font-bold">Herkese Gönder</div>
+            <div className="text-xs opacity-80">Her oyuncuya aynı miktar ({others.length} oyuncu)</div>
+          </div>
+        </button>
+
         <div className="grid grid-cols-2 gap-2">
           {others.map(p => {
             const selected = toId === p.id;
@@ -517,11 +546,18 @@ function SendModal({ open, socket, state, me, others, onClose }) {
       {/* Miktar */}
       <div className="form-control w-full mt-3">
         <div className="label py-1">
-          <span className="label-text font-semibold">Miktar</span>
+          <span className="label-text font-semibold">
+            {isAll ? 'Kişi başı miktar' : 'Miktar'}
+          </span>
           <button
             type="button"
             className="label-text-alt link link-primary"
-            onClick={() => setAmount(String(me.balance))}
+            onClick={() => {
+              const max = isAll && others.length > 0
+                ? Math.floor(me.balance / others.length)
+                : me.balance;
+              setAmount(String(max));
+            }}
           >
             Tümü
           </button>
@@ -544,7 +580,15 @@ function SendModal({ open, socket, state, me, others, onClose }) {
             {exceeds ? (
               <span className="text-error font-semibold">⚠ Yetersiz bakiye</span>
             ) : numAmount > 0 ? (
-              <span className="opacity-70">Kalan: <span className="font-semibold balance-display">{fmt(remaining, cur)}</span></span>
+              <span className="opacity-70">
+                {isAll && (
+                  <>
+                    Toplam: <span className="font-semibold balance-display">{fmt(totalCost, cur)}</span>
+                    {' • '}
+                  </>
+                )}
+                Kalan: <span className="font-semibold balance-display">{fmt(remaining, cur)}</span>
+              </span>
             ) : (
               <span className="opacity-50">Hızlı seç ↓</span>
             )}
@@ -563,17 +607,21 @@ function SendModal({ open, socket, state, me, others, onClose }) {
           )}
         </div>
         <div className="grid grid-cols-6 gap-1.5">
-          {[1, 5, 10, 50, 100, 500].map(p => (
-            <button
-              key={p}
-              type="button"
-              className="btn btn-sm btn-outline"
-              onClick={() => setAmount(String(numAmount + p))}
-              disabled={numAmount + p > me.balance}
-            >
-              +{p}
-            </button>
-          ))}
+          {[1, 5, 10, 50, 100, 500].map(p => {
+            const newAmount = numAmount + p;
+            const newTotal = isAll ? newAmount * others.length : newAmount;
+            return (
+              <button
+                key={p}
+                type="button"
+                className="btn btn-sm btn-outline"
+                onClick={() => setAmount(String(newAmount))}
+                disabled={newTotal > me.balance}
+              >
+                +{p}
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -585,12 +633,14 @@ function SendModal({ open, socket, state, me, others, onClose }) {
       >
         {busy ? (
           <span className="loading loading-spinner loading-sm" />
-        ) : !recipient ? (
+        ) : !hasSelection ? (
           'Alıcı seç'
         ) : !numAmount ? (
           'Miktar gir'
         ) : exceeds ? (
           'Yetersiz bakiye'
+        ) : isAll ? (
+          <>Herkese {fmt(numAmount, cur)} gönder ({fmt(totalCost, cur)})</>
         ) : (
           <>💸 {recipient.name}'e {fmt(numAmount, cur)} Gönder</>
         )}
