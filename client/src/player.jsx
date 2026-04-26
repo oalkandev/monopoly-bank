@@ -9,8 +9,11 @@ import { useTheme } from './useTheme.js';
 import { useSoundSetting, useReceiveSound } from './useReceiveSound.js';
 import { ConnectionBadge } from './ConnectionBadge.jsx';
 import { DiceNotification } from './DiceNotification.jsx';
-import { DiceHistory } from './DiceHistory.jsx';
-import { Send, Building2, Dices, Bell, BellOff } from 'lucide-react';
+import { DiceList } from './DiceHistory.jsx';
+import {
+  Send, Building2, Dices, Bell, BellOff,
+  Receipt, ArrowLeftRight, ArrowDownToLine, ArrowUpFromLine, Flag, Building,
+} from 'lucide-react';
 import '../index.css';
 
 function getCookie(name) {
@@ -48,10 +51,11 @@ function App() {
   return (
     <div className="min-h-screen p-4 max-w-md mx-auto">
       <Toaster position="top-center" toastOptions={{ duration: 2000 }} />
-      <TopBar connected={connected} sound={sound} socket={socket} state={state} />
+      <TopBar connected={connected} sound={sound} />
       {state.status === 'setup'
         ? <WaitingView me={me} />
         : <PlayingView socket={socket} state={state} me={me} sound={sound} />}
+      {state.status === 'active' && <DiceFab socket={socket} />}
       <DiceNotification
         roll={activeRoll}
         players={state.players}
@@ -61,36 +65,13 @@ function App() {
   );
 }
 
-function TopBar({ connected, sound, socket, state }) {
-  const [rolling, setRolling] = useState(false);
-  const canRoll = state?.status === 'active';
-
-  const rollDice = async () => {
-    if (rolling || !socket) return;
-    setRolling(true);
-    try { await emit(socket, 'roll-dice'); }
-    catch (e) { toast.error(e.message); }
-    setTimeout(() => setRolling(false), 600);
-  };
-
+function TopBar({ connected, sound }) {
   return (
     <div className="navbar bg-base-200 rounded-box mb-4 min-h-0 py-1 px-3">
       <div className="flex-1">
         <ConnectionBadge connected={connected} size="sm" />
       </div>
       <div className="flex-none gap-1">
-        {canRoll && (
-          <button
-            onClick={rollDice}
-            disabled={rolling}
-            className="btn btn-secondary btn-sm gap-1"
-            aria-label="Zar at"
-            title="Zar at"
-          >
-            <Dices size={18} className={rolling ? 'animate-spin' : ''} />
-            Zar At
-          </button>
-        )}
         <button
           onClick={sound.toggle}
           className="btn btn-ghost btn-circle btn-sm"
@@ -102,6 +83,28 @@ function TopBar({ connected, sound, socket, state }) {
         <ThemeToggle size="sm" />
       </div>
     </div>
+  );
+}
+
+function DiceFab({ socket }) {
+  const [rolling, setRolling] = useState(false);
+  const rollDice = async () => {
+    if (rolling) return;
+    setRolling(true);
+    try { await emit(socket, 'roll-dice'); }
+    catch (e) { toast.error(e.message); }
+    setTimeout(() => setRolling(false), 600);
+  };
+  return (
+    <button
+      onClick={rollDice}
+      disabled={rolling}
+      className="btn btn-secondary btn-circle btn-lg fixed bottom-6 right-6 shadow-2xl z-40 w-16 h-16"
+      aria-label="Zar at"
+      title="Zar at"
+    >
+      <Dices size={32} className={rolling ? 'animate-spin' : ''} />
+    </button>
   );
 }
 
@@ -179,8 +182,7 @@ function PlayingView({ socket, state, me, sound }) {
       </div>
 
       <PlayerList state={state} me={me} />
-      <TransactionFeed state={state} me={me} />
-      <DiceHistory state={state} />
+      <HistoryCard state={state} me={me} />
 
       <SendModal
         open={showSend}
@@ -311,16 +313,51 @@ function PlayerList({ state, me }) {
 }
 
 const TX_META = {
-  'transfer': { icon: '↔', color: 'text-info' },
-  'pass-go': { icon: '🎲', color: 'text-success' },
-  'banker-credit': { icon: '⬆', color: 'text-success' },
-  'banker-debit': { icon: '⬇', color: 'text-error' },
-  'initial': { icon: '🏁', color: 'text-warning' },
+  'transfer':       { Icon: ArrowLeftRight,  color: 'text-info' },
+  'pass-go':        { Icon: Dices,           color: 'text-success' },
+  'banker-credit':  { Icon: ArrowDownToLine, color: 'text-success' },
+  'banker-debit':   { Icon: ArrowUpFromLine, color: 'text-error' },
+  'initial':        { Icon: Flag,            color: 'text-warning' },
 };
 
-function TransactionFeed({ state, me }) {
+function HistoryCard({ state, me }) {
+  const [tab, setTab] = useState('tx'); // 'tx' | 'dice'
+  const txCount = state.transactions.length;
+  const diceCount = state.diceRolls?.length ?? 0;
+
+  return (
+    <div className="card bg-base-200 shadow-md mb-4">
+      <div className="card-body p-4">
+        <div role="tablist" className="tabs tabs-boxed bg-base-300">
+          <button
+            type="button"
+            role="tab"
+            className={`tab gap-2 flex-1 ${tab === 'tx' ? 'tab-active' : ''}`}
+            onClick={() => setTab('tx')}
+          >
+            <Receipt size={16} /> İşlemler
+            <span className="badge badge-ghost badge-xs">{txCount}</span>
+          </button>
+          <button
+            type="button"
+            role="tab"
+            className={`tab gap-2 flex-1 ${tab === 'dice' ? 'tab-active' : ''}`}
+            onClick={() => setTab('dice')}
+          >
+            <Dices size={16} /> Zarlar
+            <span className="badge badge-ghost badge-xs">{diceCount}</span>
+          </button>
+        </div>
+
+        {tab === 'tx' ? <TxList state={state} me={me} /> : <DiceList state={state} />}
+      </div>
+    </div>
+  );
+}
+
+function TxList({ state, me }) {
   const cur = state.config.currency;
-  const [filter, setFilter] = useState('all'); // 'all' | 'me' | 'bank'
+  const [filter, setFilter] = useState('all');
   const allTxs = [...state.transactions].slice(-100).reverse();
 
   const filterFn = (t) => {
@@ -332,73 +369,65 @@ function TransactionFeed({ state, me }) {
   const txs = allTxs.filter(filterFn);
 
   return (
-    <div className="card bg-base-200 shadow-md mb-4">
-      <div className="card-body p-4">
-        <div className="flex items-center justify-between">
-          <h3 className="font-bold text-sm opacity-70 uppercase tracking-wide">İşlem akışı</h3>
-          <span className="badge badge-ghost badge-sm">
-            {filter === 'all' ? allTxs.length : `${txs.length}/${allTxs.length}`}
-          </span>
-        </div>
+    <>
+      <div role="tablist" className="tabs tabs-boxed tabs-sm bg-base-300 mt-3">
+        <button
+          type="button"
+          role="tab"
+          className={`tab ${filter === 'all' ? 'tab-active' : ''}`}
+          onClick={() => setFilter('all')}
+        >Tümü</button>
+        <button
+          type="button"
+          role="tab"
+          className={`tab gap-1 ${filter === 'me' ? 'tab-active' : ''}`}
+          onClick={() => setFilter('me')}
+          style={filter === 'me' ? { backgroundColor: me.color, color: 'white' } : undefined}
+        >Ben</button>
+        <button
+          type="button"
+          role="tab"
+          className={`tab gap-1 ${filter === 'bank' ? 'tab-active' : ''}`}
+          onClick={() => setFilter('bank')}
+        ><Building size={14} /> Banka</button>
+      </div>
 
-        <div role="tablist" className="tabs tabs-boxed tabs-sm bg-base-300 mt-2">
-          <button
-            type="button"
-            role="tab"
-            className={`tab ${filter === 'all' ? 'tab-active' : ''}`}
-            onClick={() => setFilter('all')}
-          >Tümü</button>
-          <button
-            type="button"
-            role="tab"
-            className={`tab ${filter === 'me' ? 'tab-active' : ''}`}
-            onClick={() => setFilter('me')}
-            style={filter === 'me' ? { backgroundColor: me.color, color: 'white' } : undefined}
-          >Ben</button>
-          <button
-            type="button"
-            role="tab"
-            className={`tab ${filter === 'bank' ? 'tab-active' : ''}`}
-            onClick={() => setFilter('bank')}
-          >🏦 Banka</button>
+      {allTxs.length === 0 ? (
+        <div className="text-center py-6 opacity-50 text-sm">
+          <div className="text-3xl">📭</div>
+          <p>Henüz işlem yok</p>
         </div>
-
-        {allTxs.length === 0 ? (
-          <div className="text-center py-6 opacity-50 text-sm">
-            <div className="text-3xl">📭</div>
-            <p>Henüz işlem yok</p>
-          </div>
-        ) : txs.length === 0 ? (
-          <div className="text-center py-6 opacity-50 text-sm">
-            <div className="text-3xl">🔍</div>
-            <p>Bu filtreye uyan işlem yok</p>
-          </div>
-        ) : (
-          <ul className="space-y-1 max-h-80 overflow-y-auto mt-2">
-            {txs.map(t => {
-              const dir = txDirection(t, me.id);
-              const meta = TX_META[t.type] ?? { icon: '•', color: 'opacity-60' };
-              const sign = dir === 'in' ? '+' : dir === 'out' ? '−' : '';
-              const amountClass = t.undone
-                ? 'opacity-40 line-through'
-                : dir === 'in' ? 'text-success font-bold'
-                : dir === 'out' ? 'text-error font-bold'
-                : '';
-              return (
-                <li key={t.id} className={`flex items-center gap-2 py-1 px-2 rounded hover:bg-base-300/30 ${t.undone ? 'opacity-50' : ''}`}>
-                  <span className={`text-base ${meta.color}`}>{meta.icon}</span>
-                  <span className="flex-1 text-sm truncate">{describeTx(t, state.players)}</span>
-                  <span className={`balance-display ${amountClass}`}>
-                    {sign}{fmt(t.amount, cur)}
-                  </span>
-                  <span className="text-xs opacity-50 w-14 text-right">{formatRelative(t.ts)}</span>
-                </li>
-              );
-            })}
+      ) : txs.length === 0 ? (
+        <div className="text-center py-6 opacity-50 text-sm">
+          <div className="text-3xl">🔍</div>
+          <p>Bu filtreye uyan işlem yok</p>
+        </div>
+      ) : (
+        <ul className="space-y-1 max-h-80 overflow-y-auto mt-3">
+          {txs.map(t => {
+            const dir = txDirection(t, me.id);
+            const meta = TX_META[t.type] ?? { Icon: ArrowLeftRight, color: 'opacity-60' };
+            const Icon = meta.Icon;
+            const sign = dir === 'in' ? '+' : dir === 'out' ? '−' : '';
+            const amountClass = t.undone
+              ? 'opacity-40 line-through'
+              : dir === 'in' ? 'text-success font-bold'
+              : dir === 'out' ? 'text-error font-bold'
+              : '';
+            return (
+              <li key={t.id} className={`flex items-center gap-2 py-1 px-2 rounded hover:bg-base-300/30 ${t.undone ? 'opacity-50' : ''}`}>
+                <span className={meta.color}><Icon size={16} /></span>
+                <span className="flex-1 text-sm truncate">{describeTx(t, state.players)}</span>
+                <span className={`balance-display ${amountClass}`}>
+                  {sign}{fmt(t.amount, cur)}
+                </span>
+                <span className="text-xs opacity-50 w-14 text-right">{formatRelative(t.ts)}</span>
+              </li>
+            );
+          })}
           </ul>
         )}
-      </div>
-    </div>
+    </>
   );
 }
 

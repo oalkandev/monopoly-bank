@@ -2,16 +2,63 @@ import { Dices } from 'lucide-react';
 import { formatRelative } from './socket.js';
 
 const DICE_FACES = ['', '⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
-
-// 5 satır görünür, fazlası scroll ile
 const VISIBLE_ROWS = 5;
 const ROW_HEIGHT_PX = 52;
 
-export function DiceHistory({ state }) {
+// Sadece liste içeriği — başlık yok, üst karta gömülmek için
+export function DiceList({ state }) {
   const all = state.diceRolls ?? [];
   const rolls = [...all].reverse();
   const scroll = rolls.length > VISIBLE_ROWS;
 
+  if (rolls.length === 0) {
+    return (
+      <div className="text-center py-8 opacity-50 text-sm">
+        <div className="text-3xl mb-2">🎲</div>
+        Henüz zar atılmadı
+      </div>
+    );
+  }
+
+  return (
+    <ul
+      className="space-y-1.5 mt-3 overflow-y-auto pr-1"
+      style={scroll ? { maxHeight: `${VISIBLE_ROWS * ROW_HEIGHT_PX}px` } : undefined}
+    >
+      {rolls.map((r) => {
+        const player = state.players.find((p) => p.id === r.playerId);
+        const total = r.dice[0] + r.dice[1];
+        const isDouble = r.dice[0] === r.dice[1];
+        return (
+          <li
+            key={r.id}
+            className="flex items-center gap-2 py-1.5 px-2 rounded-lg bg-base-100 border-l-4"
+            style={{ borderLeftColor: player?.color ?? '#475569' }}
+          >
+            <span
+              className="font-bold text-sm truncate flex-1"
+              style={{ color: player?.color ?? undefined }}
+            >
+              {player?.name ?? 'Bilinmeyen'}
+            </span>
+            <span className="flex items-center gap-1 select-none" title={`${r.dice[0]} + ${r.dice[1]}`}>
+              <span className="text-3xl leading-none">{DICE_FACES[r.dice[0]]}</span>
+              <span className="text-base opacity-50 font-bold">+</span>
+              <span className="text-3xl leading-none">{DICE_FACES[r.dice[1]]}</span>
+            </span>
+            <span className="balance-display font-black text-base w-7 text-right">{total}</span>
+            {isDouble && <span className="badge badge-warning badge-xs">çift</span>}
+            <span className="text-xs opacity-50 w-12 text-right">{formatRelative(r.ts)}</span>
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
+// Geriye dönük uyumluluk: kendi başına kart olarak da kullanılabilir
+export function DiceHistory({ state }) {
+  const count = state.diceRolls?.length ?? 0;
   return (
     <div className="card bg-base-200 shadow-md mb-4">
       <div className="card-body p-4">
@@ -19,44 +66,9 @@ export function DiceHistory({ state }) {
           <h3 className="font-bold text-sm opacity-70 uppercase tracking-wide flex items-center gap-2">
             <Dices size={16} /> Zar Geçmişi
           </h3>
-          <span className="badge badge-ghost badge-sm">{all.length}</span>
+          <span className="badge badge-ghost badge-sm">{count}</span>
         </div>
-        {rolls.length === 0 ? (
-          <div className="text-center py-4 opacity-50 text-sm">Henüz zar atılmadı</div>
-        ) : (
-          <ul
-            className="space-y-1.5 mt-2 overflow-y-auto pr-1"
-            style={scroll ? { maxHeight: `${VISIBLE_ROWS * ROW_HEIGHT_PX}px` } : undefined}
-          >
-            {rolls.map((r) => {
-              const player = state.players.find((p) => p.id === r.playerId);
-              const total = r.dice[0] + r.dice[1];
-              const isDouble = r.dice[0] === r.dice[1];
-              return (
-                <li
-                  key={r.id}
-                  className="flex items-center gap-2 py-1.5 px-2 rounded-lg bg-base-100 border-l-4"
-                  style={{ borderLeftColor: player?.color ?? '#475569' }}
-                >
-                  <span
-                    className="font-bold text-sm truncate flex-1"
-                    style={{ color: player?.color ?? undefined }}
-                  >
-                    {player?.name ?? 'Bilinmeyen'}
-                  </span>
-                  <span className="flex items-center gap-1 select-none" title={`${r.dice[0]} + ${r.dice[1]}`}>
-                    <span className="text-3xl leading-none">{DICE_FACES[r.dice[0]]}</span>
-                    <span className="text-base opacity-50 font-bold">+</span>
-                    <span className="text-3xl leading-none">{DICE_FACES[r.dice[1]]}</span>
-                  </span>
-                  <span className="balance-display font-black text-base w-7 text-right">{total}</span>
-                  {isDouble && <span className="badge badge-warning badge-xs">çift</span>}
-                  <span className="text-xs opacity-50 w-12 text-right">{formatRelative(r.ts)}</span>
-                </li>
-              );
-            })}
-          </ul>
-        )}
+        <DiceList state={state} />
       </div>
     </div>
   );

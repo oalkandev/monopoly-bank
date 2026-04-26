@@ -8,11 +8,12 @@ import { ThemeToggle } from './ThemeToggle.jsx';
 import { useTheme } from './useTheme.js';
 import { ConnectionBadge } from './ConnectionBadge.jsx';
 import { DiceNotification } from './DiceNotification.jsx';
-import { DiceHistory } from './DiceHistory.jsx';
+import { DiceList } from './DiceHistory.jsx';
 import { copyText } from './clipboard.js';
 import {
   QrCode as QrIcon, Dices, Plus, Minus, RotateCcw, MoreVertical, Trash2, Copy, Check, Pencil,
   Settings, UserPlus, Users, PlayCircle,
+  Receipt, ArrowLeftRight, ArrowDownToLine, ArrowUpFromLine, Flag, Undo2,
 } from 'lucide-react';
 import '../index.css';
 
@@ -281,8 +282,7 @@ function ActiveView({ socket, state, lanUrl }) {
           </div>
         </div>
         <div className="lg:col-span-1">
-          <TransactionFeed socket={socket} state={state} />
-          <DiceHistory state={state} />
+          <HistoryCard socket={socket} state={state} />
         </div>
       </div>
       {qrPlayer && (
@@ -493,9 +493,10 @@ function BankerPlayerCard({ socket, player, state, onShowQr }) {
   );
 }
 
-function TransactionFeed({ socket, state }) {
+function HistoryCard({ socket, state }) {
+  const [tab, setTab] = useState('tx'); // 'tx' | 'dice'
   const [, force] = useState(0);
-  const [filter, setFilter] = useState('all'); // 'all' | 'bank' | 'player:<id>'
+  const [filter, setFilter] = useState('all');
 
   useEffect(() => {
     const id = setInterval(() => force(n => n + 1), 30000);
@@ -509,35 +510,55 @@ function TransactionFeed({ socket, state }) {
 
   const allTxs = [...state.transactions].reverse();
   const txs = allTxs.filter(t => matchFilter(t, filter));
+  const diceCount = state.diceRolls?.length ?? 0;
 
   return (
     <div className="card bg-base-200 shadow-md mb-4">
       <div className="card-body p-4">
-        <div className="flex items-center justify-between">
-          <h2 className="card-title text-base">📜 İşlem Geçmişi</h2>
-          <span className="badge badge-ghost badge-sm">
-            {filter === 'all' ? allTxs.length : `${txs.length}/${allTxs.length}`}
-          </span>
+        <div role="tablist" className="tabs tabs-boxed bg-base-300">
+          <button
+            type="button"
+            role="tab"
+            className={`tab gap-2 flex-1 ${tab === 'tx' ? 'tab-active' : ''}`}
+            onClick={() => setTab('tx')}
+          >
+            <Receipt size={16} /> İşlemler
+            <span className="badge badge-ghost badge-xs">{allTxs.length}</span>
+          </button>
+          <button
+            type="button"
+            role="tab"
+            className={`tab gap-2 flex-1 ${tab === 'dice' ? 'tab-active' : ''}`}
+            onClick={() => setTab('dice')}
+          >
+            <Dices size={16} /> Zarlar
+            <span className="badge badge-ghost badge-xs">{diceCount}</span>
+          </button>
         </div>
 
-        <FilterBar state={state} filter={filter} setFilter={setFilter} />
-
-        {allTxs.length === 0 ? (
-          <div className="text-center py-8 opacity-50 text-sm">
-            <div className="text-3xl mb-2">📭</div>
-            Henüz işlem yok
-          </div>
-        ) : txs.length === 0 ? (
-          <div className="text-center py-8 opacity-50 text-sm">
-            <div className="text-3xl mb-2">🔍</div>
-            Bu filtreye uyan işlem yok
-          </div>
+        {tab === 'tx' ? (
+          <>
+            <FilterBar state={state} filter={filter} setFilter={setFilter} />
+            {allTxs.length === 0 ? (
+              <div className="text-center py-8 opacity-50 text-sm">
+                <div className="text-3xl mb-2">📭</div>
+                Henüz işlem yok
+              </div>
+            ) : txs.length === 0 ? (
+              <div className="text-center py-8 opacity-50 text-sm">
+                <div className="text-3xl mb-2">🔍</div>
+                Bu filtreye uyan işlem yok
+              </div>
+            ) : (
+              <div className="overflow-y-auto max-h-[65vh] -mx-2 px-2">
+                {txs.map(t => (
+                  <TxRow key={t.id} tx={t} state={state} onUndo={undo} />
+                ))}
+              </div>
+            )}
+          </>
         ) : (
-          <div className="overflow-y-auto max-h-[65vh] -mx-2 px-2">
-            {txs.map(t => (
-              <TxRow key={t.id} tx={t} state={state} onUndo={undo} />
-            ))}
-          </div>
+          <DiceList state={state} />
         )}
       </div>
     </div>
@@ -605,12 +626,15 @@ function TxRow({ tx, state, onUndo }) {
   const cur = state.config.currency;
   const fromP = state.players.find(p => p.id === tx.from);
   const toP = state.players.find(p => p.id === tx.to);
-  const meta = TX_META[tx.type] ?? { icon: '•', label: tx.type, color: 'opacity-60' };
+  const meta = TX_META[tx.type] ?? { Icon: ArrowLeftRight, label: tx.type, color: 'opacity-60' };
+  const Icon = meta.Icon;
 
   return (
     <div className={`group rounded-lg p-2 hover:bg-base-300/50 transition-colors ${tx.undone ? 'opacity-40' : ''}`}>
       <div className="flex items-start gap-2">
-        <span className={`text-lg leading-none mt-0.5 ${meta.color}`}>{meta.icon}</span>
+        <span className={`mt-0.5 ${meta.color}`}>
+          <Icon size={18} />
+        </span>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1 flex-wrap text-sm">
             {fromP ? <Chip player={fromP} /> : <span className="opacity-60 text-xs">Banka</span>}
@@ -626,11 +650,12 @@ function TxRow({ tx, state, onUndo }) {
         </div>
         {!tx.undone && (
           <button
-            className="btn btn-ghost btn-xs opacity-0 group-hover:opacity-100 transition-opacity"
+            className="btn btn-ghost btn-xs btn-circle opacity-0 group-hover:opacity-100 transition-opacity"
             onClick={() => onUndo(tx.id)}
             title="Geri al"
+            aria-label="Geri al"
           >
-            ↩
+            <Undo2 size={14} />
           </button>
         )}
       </div>
@@ -650,11 +675,11 @@ function Chip({ player }) {
 }
 
 const TX_META = {
-  'transfer': { icon: '↔', label: 'Transfer', color: 'text-info' },
-  'pass-go': { icon: '🎲', label: 'GO', color: 'text-success' },
-  'banker-credit': { icon: '⬆', label: 'Banka kredisi', color: 'text-success' },
-  'banker-debit': { icon: '⬇', label: 'Banka borcu', color: 'text-error' },
-  'initial': { icon: '🏁', label: 'Başlangıç', color: 'text-warning' },
+  'transfer':       { Icon: ArrowLeftRight,    label: 'Transfer',       color: 'text-info' },
+  'pass-go':        { Icon: Dices,             label: 'GO',             color: 'text-success' },
+  'banker-credit':  { Icon: ArrowDownToLine,   label: 'Bankadan',       color: 'text-success' },
+  'banker-debit':   { Icon: ArrowUpFromLine,   label: 'Bankaya',        color: 'text-error' },
+  'initial':        { Icon: Flag,              label: 'Başlangıç',      color: 'text-warning' },
 };
 
 createRoot(document.getElementById('root')).render(<App />);
