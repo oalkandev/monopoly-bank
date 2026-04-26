@@ -204,7 +204,7 @@ function SetupView({ socket, state, lanUrl }) {
                   type="number"
                   inputMode="numeric"
                   placeholder="Yeni tutar"
-                  className="input input-bordered input-sm join-item flex-1 min-w-0"
+                  className="input input-bordered join-item flex-1 min-w-0"
                   value={newQuick}
                   onChange={(e) => setNewQuick(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addQuickAmount())}
@@ -212,10 +212,10 @@ function SetupView({ socket, state, lanUrl }) {
                 />
                 <button
                   type="button"
-                  className="btn btn-sm btn-primary join-item gap-1"
+                  className="btn btn-primary join-item gap-1"
                   onClick={addQuickAmount}
                 >
-                  <Plus size={14} /> Ekle
+                  <Plus size={16} /> Ekle
                 </button>
               </div>
             </div>
