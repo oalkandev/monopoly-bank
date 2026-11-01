@@ -30,13 +30,16 @@ function fmt(n, currency) {
 
 function App() {
   useTheme();
-  const sound = useSoundSetting();
   // Çerez tüm sekmelerde ortak; her sekme açıldığı andaki oyuncu olarak kalmalı
   const [token] = useState(() => getCookie('playerToken'));
   useWakeLock(true);
 
   if (!token) return <NoToken />;
+  return <PlayerApp token={token} />;
+}
 
+function PlayerApp({ token }) {
+  const sound = useSoundSetting();
   const { socket, state, connected, diceRoll } = useSocket({ token });
   const [activeRoll, setActiveRoll] = useState(null);
 

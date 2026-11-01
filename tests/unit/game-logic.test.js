@@ -10,7 +10,7 @@ import {
   applyPassGo,
   undoTransaction,
   MAX_NAME_LENGTH,
-} from '../server/game-logic.js';
+} from '../../server/game-logic.js';
 
 function setup() {
   let s = createInitialState();
@@ -19,7 +19,7 @@ function setup() {
   return startGame(s);
 }
 
-test('createInitialState varsayılanlarla başlar', () => {
+test('createInitialState starts with the defaults', () => {
   const s = createInitialState();
   assert.equal(s.status, 'setup');
   assert.equal(s.config.startingBalance, 1500);
@@ -28,7 +28,7 @@ test('createInitialState varsayılanlarla başlar', () => {
   assert.deepEqual(s.transactions, []);
 });
 
-test('addPlayer oyuncu ekler ve token atar', () => {
+test('addPlayer adds a player and assigns a token', () => {
   let s = createInitialState();
   s = addPlayer(s, { name: 'Ahmet', color: '#e53935' });
   assert.equal(s.players.length, 1);
@@ -38,7 +38,7 @@ test('addPlayer oyuncu ekler ve token atar', () => {
   assert.ok(s.players[0].token);
 });
 
-test('startGame her oyuncuya başlangıç parası verir', () => {
+test('startGame gives every player the starting balance', () => {
   const s = setup();
   assert.equal(s.status, 'active');
   assert.equal(s.players[0].balance, 1500);
@@ -47,7 +47,7 @@ test('startGame her oyuncuya başlangıç parası verir', () => {
   assert.equal(s.transactions[0].type, 'initial');
 });
 
-test('startGame özel başlangıç parası kullanır', () => {
+test('startGame uses a custom starting balance', () => {
   let s = createInitialState();
   s = addPlayer(s, { name: 'A', color: '#f00' });
   s = addPlayer(s, { name: 'B', color: '#00f' });
@@ -57,13 +57,13 @@ test('startGame özel başlangıç parası kullanır', () => {
   assert.equal(s.players[1].balance, 1000);
 });
 
-test('startGame 2 oyuncudan az ile reddeder', () => {
+test('startGame refuses with fewer than 2 players', () => {
   let s = createInitialState();
   s = addPlayer(s, { name: 'A', color: '#f00' });
   assert.throws(() => startGame(s), /errors\.minTwoPlayers/);
 });
 
-test('applyTransfer bakiyeleri günceller', () => {
+test('applyTransfer updates both balances', () => {
   let s = setup();
   const [a, b] = s.players;
   s = applyTransfer(s, { fromId: a.id, toId: b.id, amount: 200 });
@@ -72,7 +72,7 @@ test('applyTransfer bakiyeleri günceller', () => {
   assert.equal(s.transactions.at(-1).type, 'transfer');
 });
 
-test('applyTransfer yetersiz bakiyede hata atar', () => {
+test('applyTransfer throws when the balance is insufficient', () => {
   const s = setup();
   const [a, b] = s.players;
   assert.throws(
@@ -81,7 +81,7 @@ test('applyTransfer yetersiz bakiyede hata atar', () => {
   );
 });
 
-test('applyTransfer geçersiz miktarı reddeder', () => {
+test('applyTransfer refuses an invalid amount', () => {
   const s = setup();
   const [a, b] = s.players;
   assert.throws(() => applyTransfer(s, { fromId: a.id, toId: b.id, amount: 0 }), /errors\.invalidAmount/);
@@ -89,13 +89,13 @@ test('applyTransfer geçersiz miktarı reddeder', () => {
   assert.throws(() => applyTransfer(s, { fromId: a.id, toId: b.id, amount: NaN }), /errors\.invalidAmount/);
 });
 
-test('applyTransfer aynı kişiye gönderimi reddeder', () => {
+test('applyTransfer refuses a transfer to oneself', () => {
   const s = setup();
   const [a] = s.players;
   assert.throws(() => applyTransfer(s, { fromId: a.id, toId: a.id, amount: 10 }), /errors\.transferSelf/);
 });
 
-test('applyPassGo bonus ekler', () => {
+test('applyPassGo adds the bonus', () => {
   let s = setup();
   const [a] = s.players;
   s = applyPassGo(s, { playerId: a.id });
@@ -103,7 +103,7 @@ test('applyPassGo bonus ekler', () => {
   assert.equal(s.transactions.at(-1).type, 'pass-go');
 });
 
-test('applyBankerAdjust pozitif → kredi, negatif → borç', () => {
+test('applyBankerAdjust credits on positive and debits on negative amounts', () => {
   let s = setup();
   const [a] = s.players;
   s = applyBankerAdjust(s, { playerId: a.id, amount: 500 });
@@ -114,7 +114,7 @@ test('applyBankerAdjust pozitif → kredi, negatif → borç', () => {
   assert.equal(s.transactions.at(-1).type, 'banker-debit');
 });
 
-test('applyBankerAdjust bakiye eksiye düşmesini engeller', () => {
+test('applyBankerAdjust refuses to take a balance below zero', () => {
   const s = setup();
   const [a] = s.players;
   assert.throws(
@@ -123,7 +123,7 @@ test('applyBankerAdjust bakiye eksiye düşmesini engeller', () => {
   );
 });
 
-test('undoTransaction transferi tersine çevirir', () => {
+test('undoTransaction reverses a transfer', () => {
   let s = setup();
   const [a, b] = s.players;
   s = applyTransfer(s, { fromId: a.id, toId: b.id, amount: 200 });
@@ -134,7 +134,7 @@ test('undoTransaction transferi tersine çevirir', () => {
   assert.equal(s.transactions.find(t => t.id === txId).undone, true);
 });
 
-test('undoTransaction iki kez aynı işlemi geri alamaz', () => {
+test('undoTransaction cannot undo the same transaction twice', () => {
   let s = setup();
   const [a, b] = s.players;
   s = applyTransfer(s, { fromId: a.id, toId: b.id, amount: 200 });
@@ -143,7 +143,7 @@ test('undoTransaction iki kez aynı işlemi geri alamaz', () => {
   assert.throws(() => undoTransaction(s, { transactionId: txId }), /errors\.alreadyUndone/);
 });
 
-test('undoTransaction pass-go işlemini geri alır', () => {
+test('undoTransaction reverses a pass-go', () => {
   let s = setup();
   const [a] = s.players;
   s = applyPassGo(s, { playerId: a.id });
@@ -152,7 +152,7 @@ test('undoTransaction pass-go işlemini geri alır', () => {
   assert.equal(s.players[0].balance, 1500);
 });
 
-test('renamePlayer oyun başladıktan sonra yalnızca o oyuncunun adını değiştirir', () => {
+test('renamePlayer after the game starts changes only the name of only that player', () => {
   const s = setup();
   const [a, b] = s.players;
   const r = renamePlayer(s, { playerId: a.id, name: 'Yeni' });
@@ -162,13 +162,13 @@ test('renamePlayer oyun başladıktan sonra yalnızca o oyuncunun adını deği�
   assert.deepEqual(r.players[1], b);
 });
 
-test('renamePlayer baştaki ve sondaki boşlukları kırpar', () => {
+test('renamePlayer trims leading and trailing whitespace', () => {
   const s = setup();
   const r = renamePlayer(s, { playerId: s.players[0].id, name: '  Ayşe  ' });
   assert.equal(r.players[0].name, 'Ayşe');
 });
 
-test('renamePlayer boş, boşluk veya eksik isimde hata verir', () => {
+test('renamePlayer throws on an empty, blank or missing name', () => {
   const s = setup();
   const playerId = s.players[0].id;
   assert.throws(() => renamePlayer(s, { playerId, name: '' }), /errors\.nameEmpty/);
@@ -176,12 +176,12 @@ test('renamePlayer boş, boşluk veya eksik isimde hata verir', () => {
   assert.throws(() => renamePlayer(s, { playerId }), /errors\.nameEmpty/);
 });
 
-test('renamePlayer bilinmeyen oyuncuda hata verir', () => {
+test('renamePlayer throws for an unknown player', () => {
   const s = setup();
   assert.throws(() => renamePlayer(s, { playerId: 'yok', name: 'X' }), /errors\.playerNotFound/);
 });
 
-test('addPlayer tam 24 karakteri kabul eder, 25 karakteri reddeder; kenar boşlukları sınıra dahil değildir', () => {
+test('addPlayer accepts exactly 24 characters and refuses 25; surrounding whitespace does not count toward the limit', () => {
   const s = createInitialState();
   const ok = addPlayer(s, { name: 'a'.repeat(MAX_NAME_LENGTH), color: '#f00' });
   assert.equal(ok.players[0].name.length, 24);
@@ -190,7 +190,7 @@ test('addPlayer tam 24 karakteri kabul eder, 25 karakteri reddeder; kenar boşlu
   assert.equal(padded.players[0].name, 'a'.repeat(24));
 });
 
-test('renamePlayer da 24 karakter sınırını uygular', () => {
+test('renamePlayer enforces the same 24-character limit', () => {
   const s = setup();
   const playerId = s.players[0].id;
   const r = renamePlayer(s, { playerId, name: ` ${'b'.repeat(24)} ` });
@@ -198,7 +198,7 @@ test('renamePlayer da 24 karakter sınırını uygular', () => {
   assert.throws(() => renamePlayer(s, { playerId, name: 'b'.repeat(25) }), /errors\.nameTooLong/);
 });
 
-test('addPlayer aynı ismi büyük/küçük harf duyarsız reddeder, aksan farklı isim sayılır', () => {
+test('addPlayer refuses the same name regardless of letter case, while an accent makes a different name', () => {
   let s = addPlayer(createInitialState(), { name: 'Ali', color: '#f00' });
   assert.throws(() => addPlayer(s, { name: 'ali', color: '#00f' }), /errors\.nameTaken/);
   assert.throws(() => addPlayer(s, { name: ' ALI ', color: '#00f' }), /errors\.nameTaken/);
@@ -207,7 +207,7 @@ test('addPlayer aynı ismi büyük/küçük harf duyarsız reddeder, aksan farkl
   assert.equal(s.players.length, 3);
 });
 
-test('renamePlayer başka oyuncunun ismini reddeder, kendi isminin harf boyutunu değiştirebilir', () => {
+test('renamePlayer refuses a name another player has but allows changing the case of its own name', () => {
   const s = setup();
   const [a] = s.players;
   assert.throws(() => renamePlayer(s, { playerId: a.id, name: 'b' }), /errors\.nameTaken/);
@@ -215,7 +215,7 @@ test('renamePlayer başka oyuncunun ismini reddeder, kendi isminin harf boyutunu
   assert.equal(r.players[0].name, 'a');
 });
 
-test('metin olmayan isim TypeError yerine errors.nameEmpty verir', () => {
+test('a non-string name gives errors.nameEmpty instead of a TypeError', () => {
   assert.throws(() => addPlayer(createInitialState(), { name: 123, color: '#f00' }), /errors\.nameEmpty/);
   const s = setup();
   assert.throws(() => renamePlayer(s, { playerId: s.players[0].id, name: 123 }), /errors\.nameEmpty/);
