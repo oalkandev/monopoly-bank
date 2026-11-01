@@ -4,14 +4,27 @@ import { formatRelative } from './socket.js';
 
 const DICE_FACES = ['', '⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
 
-export function DiceList({ state, maxHeightClass = 'max-h-80' }) {
+// Boyuta göre class'lar; normal set oyuncunun telefon ekranında kullanılır
+const DICE_SIZES = {
+  normal: {
+    list: 'space-y-1.5', row: 'gap-2 py-1.5 px-2', name: 'text-sm', face: 'text-3xl', plus: 'text-base',
+    total: 'text-base w-7', badge: 'badge-xs', time: 'text-xs w-12', empty: 'text-sm',
+  },
+  large: {
+    list: 'space-y-2', row: 'gap-4 py-3 px-4', name: 'text-2xl', face: 'text-6xl', plus: 'text-2xl',
+    total: 'text-4xl w-14', badge: 'badge-lg', time: 'text-base w-24', empty: 'text-base',
+  },
+};
+
+export function DiceList({ state, maxHeightClass = 'max-h-80', large = false }) {
   const { t } = useTranslation();
+  const sz = large ? DICE_SIZES.large : DICE_SIZES.normal;
   const all = state.diceRolls ?? [];
   const rolls = [...all].reverse();
 
   if (rolls.length === 0) {
     return (
-      <div className="text-center py-8 opacity-50 text-sm">
+      <div className={`text-center py-8 opacity-50 ${sz.empty}`}>
         <div className="text-3xl mb-2">🎲</div>
         {t('history.noDice')}
       </div>
@@ -19,7 +32,7 @@ export function DiceList({ state, maxHeightClass = 'max-h-80' }) {
   }
 
   return (
-    <ul className={`space-y-1.5 mt-3 overflow-y-auto pr-1 ${maxHeightClass}`}>
+    <ul className={`${sz.list} mt-3 overflow-y-auto pr-1 ${maxHeightClass}`}>
       {rolls.map((r) => {
         const player = state.players.find((p) => p.id === r.playerId);
         const total = r.dice[0] + r.dice[1];
@@ -27,23 +40,25 @@ export function DiceList({ state, maxHeightClass = 'max-h-80' }) {
         return (
           <li
             key={r.id}
-            className="flex items-center gap-2 py-1.5 px-2 rounded-lg bg-base-100 border-l-4"
+            className={`flex items-center ${sz.row} rounded-lg bg-base-100 border-l-4`}
             style={{ borderLeftColor: player?.color ?? '#475569' }}
           >
-            <span
-              className="font-bold text-sm truncate flex-1"
-              style={{ color: player?.color ?? undefined }}
-            >
-              {player?.name ?? '?'}
+            <span className="flex items-center gap-2 flex-1 min-w-0">
+              <span
+                className={`font-bold ${sz.name} truncate`}
+                style={{ color: player?.color ?? undefined }}
+              >
+                {player?.name ?? '?'}
+              </span>
+              {isDouble && <span className={`badge badge-warning ${sz.badge} shrink-0`}>{t('history.diceDouble')}</span>}
             </span>
-            <span className="flex items-center gap-1 select-none" title={`${r.dice[0]} + ${r.dice[1]}`}>
-              <span className="text-3xl leading-none">{DICE_FACES[r.dice[0]]}</span>
-              <span className="text-base opacity-50 font-bold">+</span>
-              <span className="text-3xl leading-none">{DICE_FACES[r.dice[1]]}</span>
+            <span className="flex items-center gap-1 select-none shrink-0" title={`${r.dice[0]} + ${r.dice[1]}`}>
+              <span className={`${sz.face} leading-none`}>{DICE_FACES[r.dice[0]]}</span>
+              <span className={`${sz.plus} opacity-50 font-bold`}>+</span>
+              <span className={`${sz.face} leading-none`}>{DICE_FACES[r.dice[1]]}</span>
             </span>
-            <span className="balance-display font-black text-base w-7 text-right">{total}</span>
-            {isDouble && <span className="badge badge-warning badge-xs">{t('history.diceDouble')}</span>}
-            <span className="text-xs opacity-50 w-12 text-right">{formatRelative(r.ts)}</span>
+            <span className={`balance-display font-black ${sz.total} text-right`}>{total}</span>
+            <span className={`${sz.time} opacity-50 text-right`}>{formatRelative(r.ts)}</span>
           </li>
         );
       })}

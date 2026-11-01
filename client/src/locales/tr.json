@@ -119,11 +119,17 @@
       "hint": "Vergi, mülk satın alma vb. için kullan.",
       "pay": "🏦 Bankaya {{amount}} Öde",
       "paid": "Bankaya {{amount}} ödendi"
+    },
+    "renameModal": {
+      "title": "İsmini Değiştir",
+      "label": "Yeni isim",
+      "saved": "İsmin güncellendi"
     }
   },
   "history": {
     "transactions": "İşlemler",
     "dice": "Zarlar",
+    "both": "Her İkisi",
     "transactionFeed": "İşlem akışı",
     "transactionHistory": "İşlem Geçmişi",
     "diceHistory": "Zar Geçmişi",
@@ -170,6 +176,8 @@
     "playerAfterStart": "Oyun başladıktan sonra oyuncu eklenemez",
     "removePlayerAfterStart": "Oyun başladıktan sonra oyuncu silinemez",
     "nameEmpty": "İsim boş olamaz",
+    "nameTooLong": "İsim en fazla 24 karakter olabilir",
+    "nameTaken": "Bu isim zaten kullanılıyor",
     "wakeLockFailed": "Wake lock alınamadı",
     "unknownError": "Bilinmeyen hata"
   },

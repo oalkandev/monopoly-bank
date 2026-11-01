@@ -19,7 +19,7 @@ function getLanIp() {
 /**
  * Sunucuyu başlatır. Hem CLI hem Electron main process tarafından çağrılır.
  * @param {object} options
- * @param {number} options.port  0 verilirse OS boş bir port atar.
+ * @param {number} options.port  0 verilirse OS boş bir port atar. Port doluysa EADDRINUSE ile reddeder.
  * @param {string} [options.publicDir]  Frontend static dosyalarının olduğu klasör (Electron'da packaged path).
  * @param {string} [options.dataFile]  game-state.json'ın yazılacağı tam yol.
  * @param {boolean} [options.printQr]  Konsola QR kodu basılsın mı (CLI true, Electron false).
@@ -38,7 +38,13 @@ export async function startServer({
   const httpServer = createServer(app);
   const io = new Server(httpServer);
 
-  await new Promise((resolve) => httpServer.listen(port, '0.0.0.0', resolve));
+  await new Promise((resolve, reject) => {
+    httpServer.once('error', reject);
+    httpServer.listen(port, '0.0.0.0', () => {
+      httpServer.off('error', reject);
+      resolve();
+    });
+  });
 
   const actualPort = httpServer.address().port;
   const lanIp = getLanIp();

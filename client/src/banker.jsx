@@ -4,7 +4,7 @@ import toast, { Toaster } from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import './i18n.js';
 import { useSocket } from './useSocket.js';
-import { emit, formatRelative, getQuickAmounts, DEFAULT_QUICK_AMOUNTS } from './socket.js';
+import { emit, formatRelative, getQuickAmounts, DEFAULT_QUICK_AMOUNTS, MAX_NAME_LENGTH } from './socket.js';
 import { QrCode } from './QrCode.jsx';
 import { ThemeToggle } from './ThemeToggle.jsx';
 import { useTheme } from './useTheme.js';
@@ -18,7 +18,7 @@ import {
   QrCode as QrIcon, Dices, Plus, Minus, RotateCcw, MoreVertical, Trash2, Copy, Check,
   Settings, UserPlus, Users, PlayCircle,
   Receipt, ArrowLeftRight, ArrowDownToLine, ArrowUpFromLine, Flag, Undo2,
-  Wallet, ListChecks,
+  Wallet, ListChecks, Rows2,
 } from 'lucide-react';
 import '../index.css';
 
@@ -231,6 +231,7 @@ function SetupView({ socket, state, lanUrl }) {
             <input
               className="input input-bordered"
               placeholder={t('banker.playerName')}
+              maxLength={MAX_NAME_LENGTH}
               value={name}
               onChange={(e) => setName(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && addPlayer()}
@@ -335,8 +336,8 @@ function ActiveView({ socket, state, lanUrl }) {
   return (
     <>
       <ConfigBar socket={socket} state={state} />
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-4">
-        <div className="lg:col-span-2">
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 mt-4">
+        <div className="lg:col-span-3">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {state.players.map(p => (
               <BankerPlayerCard
@@ -349,7 +350,7 @@ function ActiveView({ socket, state, lanUrl }) {
             ))}
           </div>
         </div>
-        <div className="lg:col-span-1">
+        <div className="lg:col-span-2">
           <HistoryCard socket={socket} state={state} />
         </div>
       </div>
@@ -386,7 +387,7 @@ function QrModal({ player, lanUrl, onClose }) {
       className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50 backdrop-blur-sm"
       onClick={onClose}
     >
-      <div className="card bg-base-100 shadow-2xl max-w-sm w-full" onClick={(e) => e.stopPropagation()}>
+      <div className="card bg-base-100 shadow-2xl max-w-sm w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
         <div className="card-body items-center text-center">
           <div className="badge badge-lg text-white font-bold text-base px-4 py-3" style={{ backgroundColor: player.color }}>
             {player.name}
@@ -590,18 +591,42 @@ function HistoryCard({ socket, state }) {
   const txs = allTxs.filter(tx => matchFilter(tx, filter));
   const diceCount = state.diceRolls?.length ?? 0;
 
+  // İşlem bloğu (filtre + liste); kaydırma yüksekliği sekmeye göre değişir
+  const renderTxs = (heightClass) => (
+    <>
+      <FilterBar state={state} filter={filter} setFilter={setFilter} />
+      {allTxs.length === 0 ? (
+        <div className="text-center py-8 opacity-50 text-base">
+          <div className="text-3xl mb-2">📭</div>
+          {t('history.noTransactions')}
+        </div>
+      ) : txs.length === 0 ? (
+        <div className="text-center py-8 opacity-50 text-base">
+          <div className="text-3xl mb-2">🔍</div>
+          {t('history.noFilteredTransactions')}
+        </div>
+      ) : (
+        <div className={`overflow-y-auto ${heightClass} -mx-2 px-2`}>
+          {txs.map(tx => (
+            <TxRow key={tx.id} tx={tx} state={state} onUndo={undo} />
+          ))}
+        </div>
+      )}
+    </>
+  );
+
   return (
     <div className="card bg-base-200 shadow-md mb-4">
       <div className="card-body p-4">
-        <div role="tablist" className="tabs tabs-boxed bg-base-300">
+        <div role="tablist" className="tabs tabs-boxed tabs-lg bg-base-300">
           <button
             type="button"
             role="tab"
             className={`tab gap-2 flex-1 ${tab === 'tx' ? 'tab-active' : ''}`}
             onClick={() => setTab('tx')}
           >
-            <Receipt size={16} /> {t('history.transactions')}
-            <span className="badge badge-ghost badge-xs">{allTxs.length}</span>
+            <Receipt size={22} /> {t('history.transactions')}
+            <span className="badge badge-ghost badge-sm">{allTxs.length}</span>
           </button>
           <button
             type="button"
@@ -609,34 +634,32 @@ function HistoryCard({ socket, state }) {
             className={`tab gap-2 flex-1 ${tab === 'dice' ? 'tab-active' : ''}`}
             onClick={() => setTab('dice')}
           >
-            <Dices size={16} /> {t('history.dice')}
-            <span className="badge badge-ghost badge-xs">{diceCount}</span>
+            <Dices size={22} /> {t('history.dice')}
+            <span className="badge badge-ghost badge-sm">{diceCount}</span>
+          </button>
+          <button
+            type="button"
+            role="tab"
+            className={`tab gap-2 flex-1 ${tab === 'both' ? 'tab-active' : ''}`}
+            onClick={() => setTab('both')}
+          >
+            <Rows2 size={22} /> {t('history.both')}
           </button>
         </div>
 
-        {tab === 'tx' ? (
+        {tab === 'tx' && renderTxs('max-h-[calc(100vh-23rem)]')}
+        {tab === 'dice' && <DiceList state={state} large maxHeightClass="max-h-[calc(100vh-20rem)]" />}
+        {tab === 'both' && (
           <>
-            <FilterBar state={state} filter={filter} setFilter={setFilter} />
-            {allTxs.length === 0 ? (
-              <div className="text-center py-8 opacity-50 text-sm">
-                <div className="text-3xl mb-2">📭</div>
-                {t('history.noTransactions')}
-              </div>
-            ) : txs.length === 0 ? (
-              <div className="text-center py-8 opacity-50 text-sm">
-                <div className="text-3xl mb-2">🔍</div>
-                {t('history.noFilteredTransactions')}
-              </div>
-            ) : (
-              <div className="overflow-y-auto max-h-[65vh] -mx-2 px-2">
-                {txs.map(tx => (
-                  <TxRow key={tx.id} tx={tx} state={state} onUndo={undo} />
-                ))}
-              </div>
-            )}
+            <h3 className="flex items-center gap-2 text-lg font-bold mt-3">
+              <Receipt size={22} /> {t('history.transactions')}
+            </h3>
+            {renderTxs('max-h-[max(12rem,calc((100vh-30rem)/2))]')}
+            <h3 className="flex items-center gap-2 text-lg font-bold mt-3">
+              <Dices size={22} /> {t('history.dice')}
+            </h3>
+            <DiceList state={state} large maxHeightClass="max-h-[max(12rem,calc((100vh-30rem)/2))]" />
           </>
-        ) : (
-          <DiceList state={state} maxHeightClass="max-h-[65vh]" />
         )}
       </div>
     </div>
@@ -659,7 +682,7 @@ function FilterBar({ state, filter, setFilter }) {
     <button
       type="button"
       onClick={() => setFilter(value)}
-      className={`px-2.5 py-1 rounded-full text-xs font-bold border-2 transition-all whitespace-nowrap ${active ? 'shadow-sm scale-105' : 'opacity-60 hover:opacity-100'}`}
+      className={`px-3 py-1.5 rounded-full text-sm font-bold border-2 transition-all whitespace-nowrap ${active ? 'shadow-sm scale-105' : 'opacity-60 hover:opacity-100'}`}
       style={{
         borderColor: color,
         backgroundColor: active ? color : 'transparent',
@@ -675,7 +698,7 @@ function FilterBar({ state, filter, setFilter }) {
       <button
         type="button"
         onClick={() => setFilter('all')}
-        className={`btn btn-xs ${filter === 'all' ? 'btn-primary' : 'btn-ghost'}`}
+        className={`btn btn-sm ${filter === 'all' ? 'btn-primary' : 'btn-ghost'}`}
       >
         {t('common.all')}
       </button>
@@ -707,32 +730,32 @@ function TxRow({ tx, state, onUndo }) {
   const Icon = meta.Icon;
 
   return (
-    <div className={`group rounded-lg p-2 hover:bg-base-300/50 transition-colors ${tx.undone ? 'opacity-40' : ''}`}>
+    <div className={`group rounded-lg p-3 hover:bg-base-300/50 transition-colors ${tx.undone ? 'opacity-40' : ''}`}>
       <div className="flex items-start gap-2">
         <span className={`mt-0.5 ${meta.color}`}>
-          <Icon size={18} />
+          <Icon size={26} />
         </span>
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-1 flex-wrap text-sm">
-            {fromP ? <Chip player={fromP} /> : <span className="opacity-60 text-xs">{t('common.bank')}</span>}
+          <div className="flex items-center gap-2 flex-wrap text-lg">
+            {fromP ? <Chip player={fromP} /> : <span className="opacity-60 text-lg">{t('common.bank')}</span>}
             <span className="opacity-50">→</span>
-            {toP ? <Chip player={toP} /> : <span className="opacity-60 text-xs">{t('common.bank')}</span>}
+            {toP ? <Chip player={toP} /> : <span className="opacity-60 text-lg">{t('common.bank')}</span>}
           </div>
           <div className="flex items-baseline justify-between gap-2 mt-1">
-            <span className={`font-bold balance-display ${tx.undone ? 'line-through' : ''}`}>
+            <span className={`text-3xl font-black balance-display ${tx.undone ? 'line-through' : ''}`}>
               {fmt(tx.amount, cur)}
             </span>
-            <span className="text-xs opacity-50">{formatRelative(tx.ts)}</span>
+            <span className="text-base opacity-50">{formatRelative(tx.ts)}</span>
           </div>
         </div>
         {!tx.undone && (
           <button
-            className="btn btn-ghost btn-xs btn-circle opacity-0 group-hover:opacity-100 transition-opacity"
+            className="btn btn-ghost btn-sm btn-circle opacity-0 group-hover:opacity-100 transition-opacity"
             onClick={() => onUndo(tx.id)}
             title={t('history.undoAria')}
             aria-label={t('history.undoAria')}
           >
-            <Undo2 size={14} />
+            <Undo2 size={18} />
           </button>
         )}
       </div>
@@ -743,7 +766,7 @@ function TxRow({ tx, state, onUndo }) {
 function Chip({ player }) {
   return (
     <span
-      className="text-xs font-bold px-1.5 py-0.5 rounded text-white"
+      className="text-lg font-bold px-2 py-0.5 rounded text-white"
       style={{ backgroundColor: player.color }}
     >
       {player.name}

@@ -45,6 +45,10 @@ export function attachSockets(io) {
 
     socket.on('add-player', wrap(state.addPlayer));
     socket.on('remove-player', wrap(state.removePlayer));
+    socket.on('rename-player', wrap(async (p) => {
+      if (!playerId) throw new Error('errors.unauthorized');
+      await state.renamePlayer({ playerId, name: p?.name });
+    }));
     socket.on('start-game', wrap(state.startGame));
     socket.on('update-config', wrap(state.updateConfig));
     socket.on('pay-to-bank', wrap(async (p) => {

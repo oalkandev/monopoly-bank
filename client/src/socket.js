@@ -1,14 +1,8 @@
 import { io } from 'socket.io-client';
 import i18n from './i18n.js';
 
-function getCookie(name) {
-  return document.cookie.split('; ').find(c => c.startsWith(name + '='))?.split('=')[1];
-}
-
-export function createSocket({ role } = {}) {
-  const auth = role === 'banker'
-    ? { role: 'banker' }
-    : { token: getCookie('playerToken') };
+export function createSocket({ role, token } = {}) {
+  const auth = role === 'banker' ? { role: 'banker' } : { token };
   return io({ auth });
 }
 
@@ -57,6 +51,8 @@ export function txDirection(t, meId) {
 }
 
 export const DEFAULT_QUICK_AMOUNTS = [1, 5, 10, 50, 100, 500];
+// Sunucudaki MAX_NAME_LENGTH ile aynı olmalı
+export const MAX_NAME_LENGTH = 24;
 
 export function getQuickAmounts(state) {
   const arr = state?.config?.quickAmounts;

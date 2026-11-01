@@ -119,11 +119,17 @@
       "hint": "Para impostos, compra de propriedades, etc.",
       "pay": "🏦 Pagar {{amount}} ao Banco",
       "paid": "Pago {{amount}} ao banco"
+    },
+    "renameModal": {
+      "title": "Alterar seu nome",
+      "label": "Novo nome",
+      "saved": "Seu nome foi atualizado"
     }
   },
   "history": {
     "transactions": "Operações",
     "dice": "Dados",
+    "both": "Ambos",
     "transactionFeed": "Histórico de operações",
     "transactionHistory": "Histórico de Operações",
     "diceHistory": "Histórico de Dados",
@@ -170,6 +176,8 @@
     "playerAfterStart": "Não é possível adicionar jogador após o início",
     "removePlayerAfterStart": "Não é possível remover jogador após o início",
     "nameEmpty": "O nome não pode ficar vazio",
+    "nameTooLong": "O nome pode ter no máximo 24 caracteres",
+    "nameTaken": "Este nome já está em uso",
     "wakeLockFailed": "Não foi possível ativar o wake lock",
     "unknownError": "Erro desconhecido"
   },

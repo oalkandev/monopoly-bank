@@ -37,6 +37,10 @@ export async function removePlayer(payload) {
   await commit(logic.removePlayer(state, payload));
 }
 
+export async function renamePlayer(payload) {
+  await commit(logic.renamePlayer(state, payload));
+}
+
 export async function startGame(config) {
   if (config) state = { ...state, config: { ...state.config, ...config } };
   await commit(logic.startGame(state));

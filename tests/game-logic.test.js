@@ -3,11 +3,13 @@ import assert from 'node:assert/strict';
 import {
   createInitialState,
   addPlayer,
+  renamePlayer,
   startGame,
   applyTransfer,
   applyBankerAdjust,
   applyPassGo,
   undoTransaction,
+  MAX_NAME_LENGTH,
 } from '../server/game-logic.js';
 
 function setup() {
@@ -148,4 +150,73 @@ test('undoTransaction pass-go işlemini geri alır', () => {
   const txId = s.transactions.at(-1).id;
   s = undoTransaction(s, { transactionId: txId });
   assert.equal(s.players[0].balance, 1500);
+});
+
+test('renamePlayer oyun başladıktan sonra yalnızca o oyuncunun adını değiştirir', () => {
+  const s = setup();
+  const [a, b] = s.players;
+  const r = renamePlayer(s, { playerId: a.id, name: 'Yeni' });
+  assert.equal(r.players[0].name, 'Yeni');
+  assert.equal(r.players[0].token, a.token);
+  assert.equal(r.players[0].balance, a.balance);
+  assert.deepEqual(r.players[1], b);
+});
+
+test('renamePlayer baştaki ve sondaki boşlukları kırpar', () => {
+  const s = setup();
+  const r = renamePlayer(s, { playerId: s.players[0].id, name: '  Ayşe  ' });
+  assert.equal(r.players[0].name, 'Ayşe');
+});
+
+test('renamePlayer boş, boşluk veya eksik isimde hata verir', () => {
+  const s = setup();
+  const playerId = s.players[0].id;
+  assert.throws(() => renamePlayer(s, { playerId, name: '' }), /errors\.nameEmpty/);
+  assert.throws(() => renamePlayer(s, { playerId, name: '   ' }), /errors\.nameEmpty/);
+  assert.throws(() => renamePlayer(s, { playerId }), /errors\.nameEmpty/);
+});
+
+test('renamePlayer bilinmeyen oyuncuda hata verir', () => {
+  const s = setup();
+  assert.throws(() => renamePlayer(s, { playerId: 'yok', name: 'X' }), /errors\.playerNotFound/);
+});
+
+test('addPlayer tam 24 karakteri kabul eder, 25 karakteri reddeder; kenar boşlukları sınıra dahil değildir', () => {
+  const s = createInitialState();
+  const ok = addPlayer(s, { name: 'a'.repeat(MAX_NAME_LENGTH), color: '#f00' });
+  assert.equal(ok.players[0].name.length, 24);
+  assert.throws(() => addPlayer(s, { name: 'a'.repeat(25), color: '#f00' }), /errors\.nameTooLong/);
+  const padded = addPlayer(s, { name: `  ${'a'.repeat(24)}  `, color: '#f00' });
+  assert.equal(padded.players[0].name, 'a'.repeat(24));
+});
+
+test('renamePlayer da 24 karakter sınırını uygular', () => {
+  const s = setup();
+  const playerId = s.players[0].id;
+  const r = renamePlayer(s, { playerId, name: ` ${'b'.repeat(24)} ` });
+  assert.equal(r.players[0].name, 'b'.repeat(24));
+  assert.throws(() => renamePlayer(s, { playerId, name: 'b'.repeat(25) }), /errors\.nameTooLong/);
+});
+
+test('addPlayer aynı ismi büyük/küçük harf duyarsız reddeder, aksan farklı isim sayılır', () => {
+  let s = addPlayer(createInitialState(), { name: 'Ali', color: '#f00' });
+  assert.throws(() => addPlayer(s, { name: 'ali', color: '#00f' }), /errors\.nameTaken/);
+  assert.throws(() => addPlayer(s, { name: ' ALI ', color: '#00f' }), /errors\.nameTaken/);
+  s = addPlayer(s, { name: 'Ayse', color: '#00f' });
+  s = addPlayer(s, { name: 'Ayşe', color: '#0f0' });
+  assert.equal(s.players.length, 3);
+});
+
+test('renamePlayer başka oyuncunun ismini reddeder, kendi isminin harf boyutunu değiştirebilir', () => {
+  const s = setup();
+  const [a] = s.players;
+  assert.throws(() => renamePlayer(s, { playerId: a.id, name: 'b' }), /errors\.nameTaken/);
+  const r = renamePlayer(s, { playerId: a.id, name: 'a' });
+  assert.equal(r.players[0].name, 'a');
+});
+
+test('metin olmayan isim TypeError yerine errors.nameEmpty verir', () => {
+  assert.throws(() => addPlayer(createInitialState(), { name: 123, color: '#f00' }), /errors\.nameEmpty/);
+  const s = setup();
+  assert.throws(() => renamePlayer(s, { playerId: s.players[0].id, name: 123 }), /errors\.nameEmpty/);
 });
