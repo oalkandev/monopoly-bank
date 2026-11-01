@@ -6,7 +6,10 @@ const listeners = new Set();
 
 export async function init() {
   const loaded = await persistence.load();
-  if (loaded) state = loaded;
+  if (loaded) {
+    // Bağlantılar sunucuyla birlikte kapandı; kimse çevrimiçi değil.
+    state = { ...loaded, players: (loaded.players ?? []).map(p => ({ ...p, online: false })) };
+  }
 }
 
 export function get() { return state; }
@@ -14,9 +17,15 @@ export function get() { return state; }
 export function subscribe(fn) { listeners.add(fn); return () => listeners.delete(fn); }
 
 async function commit(next) {
+  // state senkron atanmalı: await'ten sonra atanırsa eşzamanlı işlemler birbirinin sonucunu ezer.
   state = next;
-  await persistence.save(state);
   for (const fn of listeners) fn(state);
+  // Diske yazılamasa da işlem geçerlidir; hata dönersek istemci yeniden dener ve iki kez öder.
+  try {
+    await persistence.save(next);
+  } catch (err) {
+    console.error('Failed to save game state:', err);
+  }
 }
 
 export async function reset() {
