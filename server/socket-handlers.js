@@ -1,6 +1,8 @@
 import * as state from './state.js';
 
 export function attachSockets(io) {
+  // Aynı oyuncunun açık bağlantı sayısı; yalnızca sonuncu kapanınca çevrimdışı olur.
+  const openConnections = new Map();
   state.subscribe((s) => io.emit('state', s));
 
   io.on('connection', (socket) => {
@@ -13,6 +15,7 @@ export function attachSockets(io) {
       const player = state.findByToken(token);
       if (player) {
         playerId = player.id;
+        openConnections.set(playerId, (openConnections.get(playerId) ?? 0) + 1);
         state.setOnline(playerId, true);
       }
     }
@@ -77,7 +80,14 @@ export function attachSockets(io) {
     socket.on('reset', wrap(requireBanker(state.reset)));
 
     socket.on('disconnect', () => {
-      if (playerId) state.setOnline(playerId, false);
+      if (!playerId) return;
+      const remaining = (openConnections.get(playerId) ?? 1) - 1;
+      if (remaining > 0) {
+        openConnections.set(playerId, remaining);
+        return;
+      }
+      openConnections.delete(playerId);
+      state.setOnline(playerId, false);
     });
   });
 }

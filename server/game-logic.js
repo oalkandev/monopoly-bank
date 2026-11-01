@@ -51,6 +51,23 @@ export function renamePlayer(state, { playerId, name }) {
   };
 }
 
+export function sanitizeConfig(patch) {
+  const allowed = {};
+  if (Number.isSafeInteger(patch?.passGoBonus) && patch.passGoBonus >= 0) allowed.passGoBonus = patch.passGoBonus;
+  if (Number.isSafeInteger(patch?.startingBalance) && patch.startingBalance > 0) allowed.startingBalance = patch.startingBalance;
+  if (typeof patch?.currency === 'string' && patch.currency.length <= 5) allowed.currency = patch.currency;
+  if (Array.isArray(patch?.quickAmounts)) {
+    const cleaned = [...new Set(
+      patch.quickAmounts
+        .map(Number)
+        .filter(n => Number.isFinite(n) && n > 0)
+        .map(n => Math.floor(n))
+    )].sort((a, b) => a - b);
+    if (cleaned.length > 0 && cleaned.length <= 12) allowed.quickAmounts = cleaned;
+  }
+  return allowed;
+}
+
 export function startGame(state) {
   if (state.status !== 'setup') throw new Error('errors.gameAlreadyStarted');
   if (state.players.length < 2) throw new Error('errors.minTwoPlayers');

@@ -51,25 +51,12 @@ export async function renamePlayer(payload) {
 }
 
 export async function startGame(config) {
-  if (config) state = { ...state, config: { ...state.config, ...config } };
-  await commit(logic.startGame(state));
+  // state, logic.startGame başarılı olmadan atanmaz: başarısız başlatma ayarları değiştirmemeli.
+  await commit(logic.startGame({ ...state, config: { ...state.config, ...logic.sanitizeConfig(config) } }));
 }
 
 export async function updateConfig(patch) {
-  const allowed = {};
-  if (Number.isFinite(patch?.passGoBonus) && patch.passGoBonus >= 0) allowed.passGoBonus = patch.passGoBonus;
-  if (Number.isFinite(patch?.startingBalance) && patch.startingBalance > 0) allowed.startingBalance = patch.startingBalance;
-  if (typeof patch?.currency === 'string' && patch.currency.length <= 5) allowed.currency = patch.currency;
-  if (Array.isArray(patch?.quickAmounts)) {
-    const cleaned = [...new Set(
-      patch.quickAmounts
-        .map(Number)
-        .filter(n => Number.isFinite(n) && n > 0)
-        .map(n => Math.floor(n))
-    )].sort((a, b) => a - b);
-    if (cleaned.length > 0 && cleaned.length <= 12) allowed.quickAmounts = cleaned;
-  }
-  await commit({ ...state, config: { ...state.config, ...allowed } });
+  await commit({ ...state, config: { ...state.config, ...logic.sanitizeConfig(patch) } });
 }
 
 export async function payToBank(payload) {
