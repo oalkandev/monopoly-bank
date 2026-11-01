@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import './i18n.js';
 import { useSocket } from './useSocket.js';
 import { useWakeLock } from './useWakeLock.js';
-import { emit, describeTx, txDirection, formatRelative, getQuickAmounts } from './socket.js';
+import { emit, describeTx, txDirection, formatRelative, getQuickAmounts, MAX_NAME_LENGTH } from './socket.js';
 import { ThemeToggle } from './ThemeToggle.jsx';
 import { useTheme } from './useTheme.js';
 import { useSoundSetting, useReceiveSound } from './useReceiveSound.js';
@@ -16,7 +16,7 @@ import { GameTimer } from './GameTimer.jsx';
 import { LanguageSwitcher } from './LanguageSwitcher.jsx';
 import {
   Send, Building2, Dices, Bell, BellOff, Users,
-  Receipt, ArrowLeftRight, ArrowDownToLine, ArrowUpFromLine, Flag, Building,
+  Receipt, ArrowLeftRight, ArrowDownToLine, ArrowUpFromLine, Flag, Building, Pencil,
 } from 'lucide-react';
 import '../index.css';
 
@@ -157,6 +157,7 @@ function PlayingView({ socket, state, me, sound }) {
   const otherPlayers = state.players.filter(p => p.id !== me.id);
   const [showSend, setShowSend] = useState(false);
   const [showBank, setShowBank] = useState(false);
+  const [showRename, setShowRename] = useState(false);
   const receivedTx = useReceivedNotification(state, me);
 
   useReceiveSound(me.balance, sound.enabled);
@@ -168,10 +169,18 @@ function PlayingView({ socket, state, me, sound }) {
         style={{ borderColor: me.color }}
       >
         <div
-          className="px-4 py-3 text-center text-white"
+          className="px-4 py-3 flex items-center justify-center gap-1 text-white"
           style={{ backgroundColor: me.color }}
         >
-          <span className="font-black text-xl tracking-wide drop-shadow">{me.name}</span>
+          <span className="font-black text-xl tracking-wide drop-shadow min-w-0 break-words">{me.name}</span>
+          <button
+            className="btn btn-ghost btn-sm btn-circle text-white hover:bg-white/20"
+            onClick={() => setShowRename(true)}
+            aria-label={t('player.renameModal.title')}
+            title={t('player.renameModal.title')}
+          >
+            <Pencil size={16} />
+          </button>
         </div>
         <div className="card-body items-center text-center p-5">
           <div className="balance-display text-6xl font-black my-2 text-primary">
@@ -211,6 +220,12 @@ function PlayingView({ socket, state, me, sound }) {
         state={state}
         me={me}
         onClose={() => setShowBank(false)}
+      />
+      <RenameModal
+        open={showRename}
+        socket={socket}
+        me={me}
+        onClose={() => setShowRename(false)}
       />
       {receivedTx.tx && (
         <ReceiveNotification
@@ -768,6 +783,54 @@ function PayBankModal({ open, socket, state, me, onClose }) {
           t('player.sendModal.insufficientShort')
         ) : (
           t('player.payBankModal.pay', { amount: fmt(numAmount, cur) })
+        )}
+      </button>
+    </Modal>
+  );
+}
+
+function RenameModal({ open, socket, me, onClose }) {
+  const { t } = useTranslation();
+  const [name, setName] = useState('');
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => { if (open) setName(me.name); }, [open]);
+
+  const trimmed = name.trim();
+  const canSave = !!trimmed && trimmed !== me.name && !busy;
+
+  const save = async () => {
+    if (!canSave) return;
+    setBusy(true);
+    try {
+      await emit(socket, 'rename-player', { name: trimmed });
+      toast.success(t('player.renameModal.saved'));
+      onClose();
+    } catch (e) { toast.error(e.message); } finally { setBusy(false); }
+  };
+
+  return (
+    <Modal open={open} onClose={onClose} title={t('player.renameModal.title')} headerColor={me.color}>
+      <div className="form-control w-full">
+        <div className="label py-1">
+          <span className="label-text font-semibold">{t('player.renameModal.label')}</span>
+        </div>
+        <input
+          type="text"
+          className="input input-bordered w-full"
+          value={name}
+          maxLength={MAX_NAME_LENGTH}
+          autoFocus
+          onChange={(e) => setName(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && save()}
+        />
+      </div>
+
+      <button className="btn btn-primary w-full mt-5" onClick={save} disabled={!canSave}>
+        {busy ? (
+          <span className="loading loading-spinner loading-sm" />
+        ) : (
+          t('common.save')
         )}
       </button>
     </Modal>

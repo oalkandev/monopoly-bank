@@ -4,6 +4,7 @@ const id = (prefix) => `${prefix}_${randomBytes(4).toString('hex')}`;
 const token = () => randomBytes(4).toString('hex');
 
 export const DEFAULT_QUICK_AMOUNTS = [1, 5, 10, 50, 100, 500];
+export const MAX_NAME_LENGTH = 24;
 
 export function createInitialState() {
   return {
@@ -23,11 +24,11 @@ export function createInitialState() {
 
 export function addPlayer(state, { name, color }) {
   if (state.status !== 'setup') throw new Error('errors.playerAfterStart');
-  if (!name?.trim()) throw new Error('errors.nameEmpty');
+  const trimmed = validateName(state, name);
   return {
     ...state,
     players: [...state.players, {
-      id: id('p'), name: name.trim(), color, token: token(),
+      id: id('p'), name: trimmed, color, token: token(),
       balance: 0, online: false,
     }],
   };
@@ -36,6 +37,17 @@ export function addPlayer(state, { name, color }) {
 export function removePlayer(state, { playerId }) {
   if (state.status !== 'setup') throw new Error('errors.removePlayerAfterStart');
   return { ...state, players: state.players.filter(p => p.id !== playerId) };
+}
+
+export function renamePlayer(state, { playerId, name }) {
+  findPlayer(state, playerId);
+  const trimmed = validateName(state, name, playerId);
+  return {
+    ...state,
+    players: state.players.map(p =>
+      p.id === playerId ? { ...p, name: trimmed } : p
+    ),
+  };
 }
 
 export function startGame(state) {
@@ -54,6 +66,17 @@ function findPlayer(state, playerId) {
   const p = state.players.find(p => p.id === playerId);
   if (!p) throw new Error('errors.playerNotFound');
   return p;
+}
+
+function validateName(state, name, playerId) {
+  const trimmed = typeof name === 'string' ? name.trim() : '';
+  if (!trimmed) throw new Error('errors.nameEmpty');
+  if (trimmed.length > MAX_NAME_LENGTH) throw new Error('errors.nameTooLong');
+  const taken = state.players.some(p =>
+    p.id !== playerId && p.name.localeCompare(trimmed, undefined, { sensitivity: 'accent' }) === 0
+  );
+  if (taken) throw new Error('errors.nameTaken');
+  return trimmed;
 }
 
 function updateBalance(state, playerId, delta) {

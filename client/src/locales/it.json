@@ -119,11 +119,17 @@
       "hint": "Per tasse, acquisto proprietà, ecc.",
       "pay": "🏦 Paga {{amount}} alla Banca",
       "paid": "Pagato {{amount}} alla banca"
+    },
+    "renameModal": {
+      "title": "Cambia il tuo nome",
+      "label": "Nuovo nome",
+      "saved": "Il tuo nome è stato aggiornato"
     }
   },
   "history": {
     "transactions": "Operazioni",
     "dice": "Dadi",
+    "both": "Entrambi",
     "transactionFeed": "Cronologia operazioni",
     "transactionHistory": "Cronologia Operazioni",
     "diceHistory": "Cronologia Dadi",
@@ -170,6 +176,8 @@
     "playerAfterStart": "Impossibile aggiungere un giocatore dopo l'inizio",
     "removePlayerAfterStart": "Impossibile rimuovere un giocatore dopo l'inizio",
     "nameEmpty": "Il nome non può essere vuoto",
+    "nameTooLong": "Il nome può contenere al massimo 24 caratteri",
+    "nameTaken": "Questo nome è già in uso",
     "wakeLockFailed": "Wake lock non disponibile",
     "unknownError": "Errore sconosciuto"
   },

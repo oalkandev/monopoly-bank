@@ -73,4 +73,5 @@ body {
   80%  { transform: rotate(6deg)   scale(0.98); }
   100% { transform: rotate(0deg) scale(1); }
 }
-.die-rolling { animation: diceRoll 0.7s ease-in-out; }
+/* 0.5s x 4 = 2s; ROLL_DURATION_MS (DiceNotification.jsx) ile aynı olmalı */
+.die-rolling { animation: diceRoll 0.5s ease-in-out 4; }

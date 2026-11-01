@@ -119,11 +119,17 @@
       "hint": "Für Steuern, Grundstückskäufe usw.",
       "pay": "🏦 {{amount}} an Bank zahlen",
       "paid": "{{amount}} an Bank gezahlt"
+    },
+    "renameModal": {
+      "title": "Namen ändern",
+      "label": "Neuer Name",
+      "saved": "Dein Name wurde aktualisiert"
     }
   },
   "history": {
     "transactions": "Transaktionen",
     "dice": "Würfel",
+    "both": "Beide",
     "transactionFeed": "Transaktionsverlauf",
     "transactionHistory": "Transaktionsverlauf",
     "diceHistory": "Würfelverlauf",
@@ -170,6 +176,8 @@
     "playerAfterStart": "Nach Spielstart kann kein Spieler hinzugefügt werden",
     "removePlayerAfterStart": "Nach Spielstart kann kein Spieler entfernt werden",
     "nameEmpty": "Name darf nicht leer sein",
+    "nameTooLong": "Der Name darf höchstens 24 Zeichen lang sein",
+    "nameTaken": "Dieser Name ist bereits vergeben",
     "wakeLockFailed": "Wake Lock konnte nicht aktiviert werden",
     "unknownError": "Unbekannter Fehler"
   },

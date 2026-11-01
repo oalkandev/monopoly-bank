@@ -119,11 +119,17 @@
       "hint": "For taxes, property purchases, etc.",
       "pay": "🏦 Pay {{amount}} to Bank",
       "paid": "Paid {{amount}} to bank"
+    },
+    "renameModal": {
+      "title": "Change Your Name",
+      "label": "New name",
+      "saved": "Your name was updated"
     }
   },
   "history": {
     "transactions": "Transactions",
     "dice": "Dice",
+    "both": "Both",
     "transactionFeed": "Transaction feed",
     "transactionHistory": "Transaction History",
     "diceHistory": "Dice History",
@@ -170,6 +176,8 @@
     "playerAfterStart": "Cannot add a player after the game has started",
     "removePlayerAfterStart": "Cannot remove a player after the game has started",
     "nameEmpty": "Name cannot be empty",
+    "nameTooLong": "Name can be at most 24 characters",
+    "nameTaken": "This name is already taken",
     "wakeLockFailed": "Wake lock could not be acquired",
     "unknownError": "Unknown error"
   },
