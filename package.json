@@ -3,6 +3,11 @@
   "version": "1.0.0",
   "description": "Local network Monopoly money manager — banker on desktop, players on phones",
   "author": "Monopoly Bank",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/oalkandev/monopoly-bank.git"
+  },
   "type": "module",
   "main": "electron/main.cjs",
   "scripts": {
