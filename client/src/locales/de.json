@@ -169,6 +169,7 @@
     "transferSelf": "Du kannst nicht an dich selbst senden",
     "insufficientBalance": "Nicht genug Guthaben",
     "invalidAmount": "Ungültiger Betrag",
+    "undoWouldOverdraw": "Rückgängig nicht möglich: Der Spieler hat dieses Geld bereits ausgegeben. Passe den Kontostand manuell an.",
     "txNotFound": "Transaktion nicht gefunden",
     "alreadyUndone": "Diese Transaktion ist bereits rückgängig gemacht",
     "minTwoPlayers": "Mindestens 2 Spieler erforderlich",

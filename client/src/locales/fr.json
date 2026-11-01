@@ -169,6 +169,7 @@
     "transferSelf": "Tu ne peux pas t'envoyer à toi-même",
     "insufficientBalance": "Solde insuffisant",
     "invalidAmount": "Montant invalide",
+    "undoWouldOverdraw": "Annulation impossible : le joueur a déjà dépensé cet argent. Corrigez le solde manuellement.",
     "txNotFound": "Opération introuvable",
     "alreadyUndone": "Cette opération est déjà annulée",
     "minTwoPlayers": "Au moins 2 joueurs requis",

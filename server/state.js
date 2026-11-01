@@ -65,7 +65,8 @@ export async function updateConfig(patch) {
 
 export async function payToBank(payload) {
   const { playerId, amount } = payload;
-  if (!Number.isFinite(amount) || amount <= 0) throw new Error('errors.invalidAmount');
+  logic.assertValidAmount(amount);
+  if (amount <= 0) throw new Error('errors.invalidAmount');
   await commit(logic.applyBankerAdjust(state, { playerId, amount: -amount }));
 }
 

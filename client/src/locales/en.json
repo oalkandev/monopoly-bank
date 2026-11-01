@@ -169,6 +169,7 @@
     "transferSelf": "Cannot transfer to yourself",
     "insufficientBalance": "Insufficient balance",
     "invalidAmount": "Invalid amount",
+    "undoWouldOverdraw": "Can't undo: the player has already spent this money. Adjust the balance manually instead.",
     "txNotFound": "Transaction not found",
     "alreadyUndone": "This transaction is already undone",
     "minTwoPlayers": "At least 2 players required",

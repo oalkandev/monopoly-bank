@@ -5,6 +5,7 @@ const token = () => randomBytes(4).toString('hex');
 
 export const DEFAULT_QUICK_AMOUNTS = [1, 5, 10, 50, 100, 500];
 export const MAX_NAME_LENGTH = 24;
+export const DEFAULT_PLAYER_COLOR = '#475569';
 
 export function createInitialState() {
   return {
@@ -28,7 +29,7 @@ export function addPlayer(state, { name, color }) {
   return {
     ...state,
     players: [...state.players, {
-      id: id('p'), name: trimmed, color, token: token(),
+      id: id('p'), name: trimmed, color: color || DEFAULT_PLAYER_COLOR, token: token(),
       balance: 0, online: false,
     }],
   };
@@ -88,6 +89,11 @@ function updateBalance(state, playerId, delta) {
   };
 }
 
+// Tutarlar yalnızca güvenli tam sayı olabilir (0.1, 1e21, NaN reddedilir).
+export function assertValidAmount(amount) {
+  if (!Number.isSafeInteger(amount)) throw new Error('errors.invalidAmount');
+}
+
 function appendTx(state, tx) {
   return {
     ...state,
@@ -96,7 +102,8 @@ function appendTx(state, tx) {
 }
 
 export function applyTransfer(state, { fromId, toId, amount }) {
-  if (!Number.isFinite(amount) || amount <= 0) throw new Error('errors.invalidAmount');
+  assertValidAmount(amount);
+  if (amount <= 0) throw new Error('errors.invalidAmount');
   if (fromId === toId) throw new Error('errors.transferSelf');
   const from = findPlayer(state, fromId);
   findPlayer(state, toId);
@@ -114,7 +121,8 @@ export function applyPassGo(state, { playerId }) {
 }
 
 export function applyBankerAdjust(state, { playerId, amount }) {
-  if (!Number.isFinite(amount) || amount === 0) throw new Error('errors.invalidAmount');
+  assertValidAmount(amount);
+  if (amount === 0) throw new Error('errors.invalidAmount');
   const p = findPlayer(state, playerId);
   if (amount < 0 && p.balance + amount < 0) throw new Error('errors.insufficientBalance');
   const s = updateBalance(state, playerId, amount);
@@ -127,23 +135,31 @@ export function undoTransaction(state, { transactionId }) {
   const tx = state.transactions.find(t => t.id === transactionId);
   if (!tx) throw new Error('errors.txNotFound');
   if (tx.undone) throw new Error('errors.alreadyUndone');
-  let s = state;
+  const deltas = new Map();
+  const add = (playerId, delta) => deltas.set(playerId, (deltas.get(playerId) ?? 0) + delta);
   switch (tx.type) {
     case 'transfer':
-      s = updateBalance(s, tx.from, tx.amount);
-      s = updateBalance(s, tx.to, -tx.amount);
+      add(tx.from, tx.amount);
+      add(tx.to, -tx.amount);
       break;
     case 'pass-go':
     case 'banker-credit':
     case 'initial':
-      s = updateBalance(s, tx.to, -tx.amount);
+      add(tx.to, -tx.amount);
       break;
     case 'banker-debit':
-      s = updateBalance(s, tx.from, tx.amount);
+      add(tx.from, tx.amount);
       break;
     default:
       throw new Error('errors.unknownError');
   }
+  // Para kaybeden hesap eksiye düşecekse hiçbir bakiyeye dokunmadan reddet.
+  for (const [playerId, delta] of deltas) {
+    const p = findPlayer(state, playerId);
+    if (delta < 0 && p.balance + delta < 0) throw new Error('errors.undoWouldOverdraw');
+  }
+  let s = state;
+  for (const [playerId, delta] of deltas) s = updateBalance(s, playerId, delta);
   return {
     ...s,
     transactions: s.transactions.map(t => t.id === transactionId ? { ...t, undone: true } : t),

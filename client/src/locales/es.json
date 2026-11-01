@@ -169,6 +169,7 @@
     "transferSelf": "No puedes enviarte a ti mismo",
     "insufficientBalance": "Saldo insuficiente",
     "invalidAmount": "Cantidad no válida",
+    "undoWouldOverdraw": "No se puede deshacer: el jugador ya gastó este dinero. Ajusta el saldo manualmente.",
     "txNotFound": "Operación no encontrada",
     "alreadyUndone": "Esta operación ya está deshecha",
     "minTwoPlayers": "Se requieren al menos 2 jugadores",

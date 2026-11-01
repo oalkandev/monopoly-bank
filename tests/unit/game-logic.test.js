@@ -220,3 +220,45 @@ test('a non-string name gives errors.nameEmpty instead of a TypeError', () => {
   const s = setup();
   assert.throws(() => renamePlayer(s, { playerId: s.players[0].id, name: 123 }), /errors\.nameEmpty/);
 });
+
+test('undo is refused when the recipient has already spent the money', () => {
+  let s = createInitialState();
+  for (const name of ['A', 'B', 'C']) s = addPlayer(s, { name, color: '#f00' });
+  s = startGame(s);
+  const [a, b, c] = s.players;
+  s = applyTransfer(s, { fromId: a.id, toId: b.id, amount: 200 });
+  const transactionId = s.transactions.at(-1).id;
+  s = applyTransfer(s, { fromId: b.id, toId: c.id, amount: 1700 });
+  assert.throws(() => undoTransaction(s, { transactionId }), /errors\.undoWouldOverdraw/);
+  assert.deepEqual(s.players.map(p => p.balance), [1300, 0, 3200]);
+});
+
+test('undoing a banker debit is never refused, because it only gives money back', () => {
+  let s = setup();
+  const [a] = s.players;
+  s = applyBankerAdjust(s, { playerId: a.id, amount: -1500 });
+  const r = undoTransaction(s, { transactionId: s.transactions.at(-1).id });
+  assert.equal(r.players[0].balance, 1500);
+});
+
+test('amounts must be whole numbers', () => {
+  const s = setup();
+  const [a, b] = s.players;
+  for (const amount of [0.1, 1.5, 1e21]) {
+    assert.throws(() => applyTransfer(s, { fromId: a.id, toId: b.id, amount }), /errors\.invalidAmount/);
+    assert.throws(() => applyBankerAdjust(s, { playerId: a.id, amount }), /errors\.invalidAmount/);
+    assert.throws(() => applyBankerAdjust(s, { playerId: a.id, amount: -amount }), /errors\.invalidAmount/);
+  }
+});
+
+test('a banker adjustment may be a negative whole number but never zero', () => {
+  const s = setup();
+  const r = applyBankerAdjust(s, { playerId: s.players[0].id, amount: -100 });
+  assert.equal(r.players[0].balance, 1400);
+  assert.throws(() => applyBankerAdjust(s, { playerId: s.players[0].id, amount: 0 }), /errors\.invalidAmount/);
+});
+
+test('a player added without a color gets the fallback color', () => {
+  const s = addPlayer(createInitialState(), { name: 'A' });
+  assert.equal(s.players[0].color, '#475569');
+});
