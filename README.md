@@ -162,7 +162,7 @@ The stack is Node.js with Express and Socket.IO on the server, and Vite, React, 
 
 ## Security
 
-This app is meant for a trusted home network. There is no login. Anyone who can reach the server on the network can open the banker page and perform banker actions, and `/api/state` returns the full game state, including every player's join token. A token is all that is needed to act as that player. Do not expose the server to the internet.
+This app is meant for a trusted home network. There is no login. Anyone who can reach the server on the network can open the banker page and perform banker actions, and `/api/state` returns the full game state, including every player's join token. A token is all that is needed to act as that player. Banker actions (adding and removing players, starting the game, changing settings, adjusting balances, undo and reset) need the banker role on the connection, but that role is self-declared by the client, so it does not stop anyone on the network. The server refuses WebSocket connections whose `Origin` host differs from the address they connect to, so a web page on another site cannot drive the game from a browser on your network. Do not expose the server to the internet.
 
 ## Trademark
 

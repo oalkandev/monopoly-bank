@@ -16,6 +16,18 @@ function getLanIp() {
     .find(i => i.family === 'IPv4' && !i.internal)?.address ?? 'localhost';
 }
 
+// Başka bir sitenin sayfası bu sunucuya WebSocket açamasın: Origin'in host'u, isteğin
+// Host başlığıyla aynı olmalı. Origin göndermeyen (tarayıcı olmayan) istemciler geçer.
+function allowSameOrigin(req, callback) {
+  const origin = req.headers.origin;
+  if (!origin) return callback(null, true);
+  try {
+    callback(null, new URL(origin).host === req.headers.host);
+  } catch {
+    callback(null, false);
+  }
+}
+
 /**
  * Sunucuyu başlatır. Hem CLI hem Electron main process tarafından çağrılır.
  * @param {object} options
@@ -36,7 +48,7 @@ export async function startServer({
 
   const app = express();
   const httpServer = createServer(app);
-  const io = new Server(httpServer);
+  const io = new Server(httpServer, { allowRequest: allowSameOrigin });
 
   await new Promise((resolve, reject) => {
     httpServer.once('error', reject);

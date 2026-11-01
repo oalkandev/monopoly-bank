@@ -24,8 +24,16 @@ export function attachSockets(io) {
         await fn(payload);
         if (typeof ack === 'function') ack({ ok: true });
       } catch (err) {
-        if (typeof ack === 'function') ack({ ok: false, error: err.message });
+        const known = typeof err?.message === 'string' && err.message.startsWith('errors.');
+        // Beklenmeyen hatanın ham metni istemciye gitmez; yalnızca sunucu logunda kalır.
+        if (!known) console.error('Unexpected socket handler error:', err);
+        if (typeof ack === 'function') ack({ ok: false, error: known ? err.message : 'errors.unknownError' });
       }
+    };
+
+    const requireBanker = (fn) => async (payload) => {
+      if (role !== 'banker') throw new Error('errors.unauthorized');
+      await fn(payload);
     };
 
     socket.on('roll-dice', wrap(async () => {
@@ -43,14 +51,14 @@ export function attachSockets(io) {
       io.emit('dice-rolled', roll);
     }));
 
-    socket.on('add-player', wrap(state.addPlayer));
-    socket.on('remove-player', wrap(state.removePlayer));
+    socket.on('add-player', wrap(requireBanker(state.addPlayer)));
+    socket.on('remove-player', wrap(requireBanker(state.removePlayer)));
     socket.on('rename-player', wrap(async (p) => {
       if (!playerId) throw new Error('errors.unauthorized');
       await state.renamePlayer({ playerId, name: p?.name });
     }));
-    socket.on('start-game', wrap(state.startGame));
-    socket.on('update-config', wrap(state.updateConfig));
+    socket.on('start-game', wrap(requireBanker(state.startGame)));
+    socket.on('update-config', wrap(requireBanker(state.updateConfig)));
     socket.on('pay-to-bank', wrap(async (p) => {
       if (!playerId && role !== 'banker') throw new Error('errors.unauthorized');
       await state.payToBank({ playerId: playerId ?? p.playerId, amount: p.amount });
@@ -64,9 +72,9 @@ export function attachSockets(io) {
       if (!p?.playerId) throw new Error('errors.playerIdRequired');
       await state.passGo({ playerId: p.playerId });
     }));
-    socket.on('banker-adjust', wrap(state.bankerAdjust));
-    socket.on('undo', wrap(state.undo));
-    socket.on('reset', wrap(state.reset));
+    socket.on('banker-adjust', wrap(requireBanker(state.bankerAdjust)));
+    socket.on('undo', wrap(requireBanker(state.undo)));
+    socket.on('reset', wrap(requireBanker(state.reset)));
 
     socket.on('disconnect', () => {
       if (playerId) state.setOnline(playerId, false);
