@@ -1,5 +1,6 @@
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
+import { request } from 'node:http';
 import { networkInterfaces } from 'node:os';
 import { startApp } from './helpers/harness.js';
 
@@ -75,4 +76,20 @@ test("a connection from the app's address on the local network is accepted", asy
     extraHeaders: { Origin: url },
   });
   assert.ok(client.socket.connected);
+});
+
+test('a socket naming a rebound host is refused', async () => {
+  const rebound = `evil.example:${app.port}`;
+  await assert.rejects(app.connect({
+    transports: ['websocket'],
+    extraHeaders: { Host: rebound, Origin: `http://${rebound}` },
+  }));
+});
+
+test('an HTTP request naming a rebound host is refused', async () => {
+  const status = await new Promise((resolve, reject) => {
+    request({ host: '127.0.0.1', port: app.port, path: '/api/state', headers: { Host: `evil.example:${app.port}` } },
+      (res) => { res.resume(); resolve(res.statusCode); }).on('error', reject).end();
+  });
+  assert.equal(status, 403);
 });

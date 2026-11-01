@@ -8,6 +8,7 @@ import { fileURLToPath } from 'node:url';
 import { mountRoutes } from './server/routes.js';
 import { attachSockets } from './server/socket-handlers.js';
 import * as state from './server/state.js';
+import { isTrustedHost } from './server/trusted-host.js';
 import * as persistence from './server/persistence.js';
 
 function getLanIp() {
@@ -19,6 +20,7 @@ function getLanIp() {
 // Başka bir sitenin sayfası bu sunucuya WebSocket açamasın: Origin'in host'u, isteğin
 // Host başlığıyla aynı olmalı. Origin göndermeyen (tarayıcı olmayan) istemciler geçer.
 function allowSameOrigin(req, callback) {
+  if (!isTrustedHost(req.headers.host)) return callback(null, false);
   const origin = req.headers.origin;
   if (!origin) return callback(null, true);
   try {
@@ -47,6 +49,10 @@ export async function startServer({
   if (dataFile) persistence.setFile(dataFile);
 
   const app = express();
+  app.use((req, res, next) => {
+    if (isTrustedHost(req.headers.host)) return next();
+    res.status(403).send('Forbidden');
+  });
   const httpServer = createServer(app);
   const io = new Server(httpServer, { allowRequest: allowSameOrigin });
 
