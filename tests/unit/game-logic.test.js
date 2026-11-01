@@ -262,3 +262,11 @@ test('a player added without a color gets the fallback color', () => {
   const s = addPlayer(createInitialState(), { name: 'A' });
   assert.equal(s.players[0].color, '#475569');
 });
+
+test('a color that is not a 6-digit hex uses the fallback', () => {
+  for (const color of ['red', 123, '#fff', 'url(x)', '#12345g']) {
+    const s = addPlayer(createInitialState(), { name: 'A', color });
+    assert.equal(s.players[0].color, '#475569', String(color));
+  }
+  assert.equal(addPlayer(createInitialState(), { name: 'A', color: '#3b82f6' }).players[0].color, '#3b82f6');
+});

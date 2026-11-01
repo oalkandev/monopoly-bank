@@ -29,7 +29,7 @@ export function addPlayer(state, { name, color }) {
   return {
     ...state,
     players: [...state.players, {
-      id: id('p'), name: trimmed, color: color || DEFAULT_PLAYER_COLOR, token: token(),
+      id: id('p'), name: trimmed, color: /^#[0-9a-fA-F]{6}$/.test(color) ? color : DEFAULT_PLAYER_COLOR, token: token(),
       balance: 0, online: false,
     }],
   };
