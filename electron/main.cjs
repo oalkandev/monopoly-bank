@@ -8,6 +8,9 @@ let mainWindow = null;
 
 const isDev = !app.isPackaged;
 
+// localStorage (tema, dil) origin'e bağlı: port değişirse ayarlar sıfırlanır, telefonların linki de bozulur
+const PREFERRED_PORT = 3737;
+
 // Packaged build'de extra resources içine konulan public/ klasörü
 function resolvePublicDir() {
   if (isDev) return path.join(__dirname, '..', 'public');
@@ -24,12 +27,17 @@ async function startEmbeddedServer() {
   const serverPath = path.join(__dirname, '..', 'server.js');
   const { pathToFileURL } = require('node:url');
   const { startServer } = await import(pathToFileURL(serverPath).href);
-  return startServer({
-    port: 0, // OS bir boş port atasın
+  const options = {
     publicDir: resolvePublicDir(),
     dataFile: resolveDataFile(),
     printQr: false,
-  });
+  };
+  try {
+    return await startServer({ ...options, port: PREFERRED_PORT });
+  } catch (err) {
+    if (err.code !== 'EADDRINUSE') throw err;
+    return startServer({ ...options, port: 0 }); // Port doluysa OS bir boş port atasın
+  }
 }
 
 async function createWindow() {
