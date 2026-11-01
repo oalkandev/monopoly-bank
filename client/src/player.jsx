@@ -31,12 +31,13 @@ function fmt(n, currency) {
 function App() {
   useTheme();
   const sound = useSoundSetting();
-  const cookieToken = getCookie('playerToken');
+  // Çerez tüm sekmelerde ortak; her sekme açıldığı andaki oyuncu olarak kalmalı
+  const [token] = useState(() => getCookie('playerToken'));
   useWakeLock(true);
 
-  if (!cookieToken) return <NoToken />;
+  if (!token) return <NoToken />;
 
-  const { socket, state, connected, diceRoll } = useSocket();
+  const { socket, state, connected, diceRoll } = useSocket({ token });
   const [activeRoll, setActiveRoll] = useState(null);
 
   useEffect(() => { if (diceRoll) setActiveRoll(diceRoll); }, [diceRoll]);
@@ -49,7 +50,7 @@ function App() {
     );
   }
 
-  const me = state.players.find(p => p.token === cookieToken);
+  const me = state.players.find(p => p.token === token);
   if (!me) return <NoToken />;
 
   return (

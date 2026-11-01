@@ -1,14 +1,8 @@
 import { io } from 'socket.io-client';
 import i18n from './i18n.js';
 
-function getCookie(name) {
-  return document.cookie.split('; ').find(c => c.startsWith(name + '='))?.split('=')[1];
-}
-
-export function createSocket({ role } = {}) {
-  const auth = role === 'banker'
-    ? { role: 'banker' }
-    : { token: getCookie('playerToken') };
+export function createSocket({ role, token } = {}) {
+  const auth = role === 'banker' ? { role: 'banker' } : { token };
   return io({ auth });
 }
 
