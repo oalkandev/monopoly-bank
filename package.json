@@ -14,7 +14,7 @@
     "start": "node server.js",
     "dev:client": "vite",
     "build": "vite build",
-    "test": "node --test tests/static/*.test.js tests/unit/*.test.js tests/integration/*.test.js",
+    "test": "node --test --test-timeout=30000 --test-force-exit tests/static/*.test.js tests/unit/*.test.js tests/integration/*.test.js",
     "test:client": "vitest run",
     "test:e2e": "npm run build && playwright test",
     "test:desktop": "playwright test --config tests/electron/playwright.config.js",

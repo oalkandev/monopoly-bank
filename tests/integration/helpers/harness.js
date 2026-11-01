@@ -26,6 +26,12 @@ function makeClient(socket) {
   };
 }
 
+// Every spawned server dies with the test process, even on a forced exit.
+const children = new Set();
+process.on('exit', () => {
+  for (const child of children) child.kill('SIGKILL');
+});
+
 function spawnServer({ port, dataFile, publicDir }) {
   const env = {
     ...process.env,
@@ -35,6 +41,8 @@ function spawnServer({ port, dataFile, publicDir }) {
   };
   delete env.ELECTRON_RUN_AS_NODE;
   const child = spawn(process.execPath, [ENTRY], { env, stdio: ['ignore', 'pipe', 'pipe'] });
+  children.add(child);
+  child.once('exit', () => children.delete(child));
   let stderr = '';
   child.stderr.on('data', (chunk) => { stderr += chunk; });
   const exited = new Promise((resolve) => child.once('exit', resolve));
