@@ -18,7 +18,8 @@
     "test:client": "vitest run",
     "test:e2e": "npm run build && playwright test",
     "test:desktop": "playwright test --config tests/electron/playwright.config.js",
-    "test:mutation": "stryker run",
+    "test:mutation": "stryker run stryker.config.json",
+    "test:mutation:full": "stryker run stryker.full.config.json",
     "lint": "eslint client/src server electron",
     "electron": "npm run build && electron .",
     "electron:dev": "electron .",
@@ -37,6 +38,7 @@
     "socket.io": "^4.7.5"
   },
   "devDependencies": {
+    "@stryker-mutator/core": "^10.1.1",
     "@vitejs/plugin-react": "^4.3.3",
     "autoprefixer": "^10.4.20",
     "daisyui": "^4.12.14",

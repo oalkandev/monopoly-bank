@@ -1,0 +1,18 @@
+{
+  "$schema": "./node_modules/@stryker-mutator/core/schema/stryker-schema.json",
+  "testRunner": "command",
+  "commandRunner": {
+    "command": "npm test"
+  },
+  "mutate": [
+    "server/game-logic.js",
+    "server/persistence.js",
+    "server/state.js",
+    "server/socket-handlers.js"
+  ],
+  "ignorePatterns": ["dist-electron", ".superpowers", "public", "docs", ".stryker-tmp", "reports"],
+  "reporters": ["clear-text", "progress", "html"],
+  "htmlReporter": { "fileName": "reports/mutation-full/mutation.html" },
+  "timeoutMS": 180000,
+  "concurrency": 4
+}
