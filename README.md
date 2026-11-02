@@ -148,8 +148,11 @@ npm run build        # builds the frontend into public/
 npm test             # locale checks, game rules and the server
 npm run test:client  # dice, notification and helper behaviour in the client
 npm run test:e2e     # multi-device journeys in a browser (see CONTRIBUTING.md)
+npm run test:desktop # smoke tests of the Electron app
 npm run lint         # React hooks rules (eslint)
 ```
+
+See [docs/testing.md](docs/testing.md) for what each test layer covers.
 
 | Path | Contents |
 | --- | --- |
@@ -164,7 +167,7 @@ The stack is Node.js with Express and Socket.IO on the server, and Vite, React, 
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, the test commands and the rules for new tests. Everyone taking part follows the [Code of Conduct](CODE_OF_CONDUCT.md).
+See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, the test commands and the rules for new tests. [docs/testing.md](docs/testing.md) lists what each test layer covers and the checks to do by hand before a release. Everyone taking part follows the [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ## Trademark
 

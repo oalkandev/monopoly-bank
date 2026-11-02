@@ -20,9 +20,12 @@ npm run build
 | `npm test` | Runs the locale checks, the game rules tests and the server tests. |
 | `npm run test:client` | Runs the client tests for the dice, the received-money notification and the helpers in `client/src`. |
 | `npm run test:e2e` | Runs the multi-device journeys in a browser. Run `npx playwright install chromium webkit` once before the first run. |
+| `npm run test:desktop` | Starts the Electron app with a temporary data folder and checks that it opens, keeps its address and theme, and falls back to another port. It opens the app's windows briefly. |
 | `npm run test:mutation` | Changes the server logic on purpose and checks that the tests notice. Takes longer than `npm test`. |
 | `npm run lint` | Checks the client, server and Electron code with eslint. |
 | `npm run build` | Builds the frontend. |
+
+What each test layer covers, and the checks to do by hand before a release, are in [docs/testing.md](docs/testing.md).
 
 ## Rules for tests
 
