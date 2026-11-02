@@ -187,7 +187,7 @@ function PlayingView({ socket, state, me, sound }) {
           </button>
         </div>
         <div className="card-body items-center text-center p-5">
-          <div className="balance-display text-6xl font-black my-2 text-primary">
+          <div data-testid="balance" className="balance-display text-6xl font-black my-2 text-primary">
             {fmt(me.balance, cur)}
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full">
@@ -296,6 +296,7 @@ function ReceiveNotification({ tx, state, onClose }) {
 
   return (
     <div
+      data-testid="receive-notification"
       className="fixed inset-0 z-[100] flex flex-col items-center justify-center p-6 cursor-pointer"
       style={{ backgroundColor: color }}
       onClick={onClose}

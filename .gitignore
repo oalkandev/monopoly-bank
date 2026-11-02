@@ -6,3 +6,5 @@ public/
 dist-electron/
 .stryker-tmp/
 reports/
+test-results/
+playwright-report/
