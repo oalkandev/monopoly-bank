@@ -169,6 +169,7 @@
     "transferSelf": "Aynı kişiye gönderim yapılamaz",
     "insufficientBalance": "Yetersiz bakiye",
     "invalidAmount": "Geçersiz miktar",
+    "undoWouldOverdraw": "Geri alınamaz: oyuncu bu parayı harcamış. Bakiyeyi elle düzeltin.",
     "txNotFound": "İşlem bulunamadı",
     "alreadyUndone": "Bu işlem zaten geri alındı",
     "minTwoPlayers": "En az 2 oyuncu gerekli",

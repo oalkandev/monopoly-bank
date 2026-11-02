@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "status": "active",
+  "config": {
+    "currency": "₺",
+    "startingBalance": 1500,
+    "passGoBonus": 200
+  },
+  "players": [
+    { "id": "p_aaaa0001", "name": "Ann", "color": "#123456", "token": "aaaa0001", "balance": 1400, "online": false },
+    { "id": "p_bbbb0002", "name": "Bob", "color": "#654321", "token": "bbbb0002", "balance": 1600, "online": false }
+  ],
+  "transactions": [
+    { "id": "t_00000001", "ts": 1700000000000, "type": "initial", "to": "p_aaaa0001", "amount": 1500, "undone": false },
+    { "id": "t_00000002", "ts": 1700000000000, "type": "initial", "to": "p_bbbb0002", "amount": 1500, "undone": false },
+    { "id": "t_00000003", "ts": 1700000001000, "type": "transfer", "from": "p_aaaa0001", "to": "p_bbbb0002", "amount": 100, "undone": false }
+  ]
+}

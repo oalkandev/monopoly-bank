@@ -14,23 +14,34 @@ export function getFile() {
 }
 
 export async function load() {
+  let raw;
   try {
-    const raw = await fs.readFile(FILE, 'utf8');
-    return JSON.parse(raw);
+    raw = await fs.readFile(FILE, 'utf8');
   } catch (err) {
     if (err.code === 'ENOENT') return null;
     throw err;
+  }
+  try {
+    return JSON.parse(raw);
+  } catch (err) {
+    // Bozuk dosya silinmez: yan tarafa alınır, oyun boş başlar.
+    const aside = `${FILE}.corrupt-${Date.now()}`;
+    await fs.rename(FILE, aside);
+    console.error(`Save file is corrupt (${err.message}); moved to ${aside}, starting empty.`);
+    return null;
   }
 }
 
 let writeQueue = Promise.resolve();
 export function save(state) {
-  writeQueue = writeQueue.then(async () => {
+  const write = writeQueue.then(async () => {
     await fs.mkdir(path.dirname(FILE), { recursive: true });
     await fs.writeFile(TMP, JSON.stringify(state, null, 2));
     await fs.rename(TMP, FILE);
   });
-  return writeQueue;
+  // Başarısız bir yazma sıradaki yazmaları engellemesin; çağırana gerçek sonuç döner.
+  writeQueue = write.catch(() => {});
+  return write;
 }
 
 export async function clear() {

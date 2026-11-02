@@ -4,3 +4,7 @@ game-state.json
 .DS_Store
 public/
 dist-electron/
+.stryker-tmp/
+reports/
+test-results/
+playwright-report/

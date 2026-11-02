@@ -6,7 +6,10 @@ const listeners = new Set();
 
 export async function init() {
   const loaded = await persistence.load();
-  if (loaded) state = loaded;
+  if (loaded) {
+    // Bağlantılar sunucuyla birlikte kapandı; kimse çevrimiçi değil.
+    state = { ...loaded, players: (loaded.players ?? []).map(p => ({ ...p, online: false })) };
+  }
 }
 
 export function get() { return state; }
@@ -14,9 +17,15 @@ export function get() { return state; }
 export function subscribe(fn) { listeners.add(fn); return () => listeners.delete(fn); }
 
 async function commit(next) {
+  // state senkron atanmalı: await'ten sonra atanırsa eşzamanlı işlemler birbirinin sonucunu ezer.
   state = next;
-  await persistence.save(state);
   for (const fn of listeners) fn(state);
+  // Diske yazılamasa da işlem geçerlidir; hata dönersek istemci yeniden dener ve iki kez öder.
+  try {
+    await persistence.save(next);
+  } catch (err) {
+    console.error('Failed to save game state:', err);
+  }
 }
 
 export async function reset() {
@@ -42,30 +51,18 @@ export async function renamePlayer(payload) {
 }
 
 export async function startGame(config) {
-  if (config) state = { ...state, config: { ...state.config, ...config } };
-  await commit(logic.startGame(state));
+  // state, logic.startGame başarılı olmadan atanmaz: başarısız başlatma ayarları değiştirmemeli.
+  await commit(logic.startGame({ ...state, config: { ...state.config, ...logic.sanitizeConfig(config) } }));
 }
 
 export async function updateConfig(patch) {
-  const allowed = {};
-  if (Number.isFinite(patch?.passGoBonus) && patch.passGoBonus >= 0) allowed.passGoBonus = patch.passGoBonus;
-  if (Number.isFinite(patch?.startingBalance) && patch.startingBalance > 0) allowed.startingBalance = patch.startingBalance;
-  if (typeof patch?.currency === 'string' && patch.currency.length <= 5) allowed.currency = patch.currency;
-  if (Array.isArray(patch?.quickAmounts)) {
-    const cleaned = [...new Set(
-      patch.quickAmounts
-        .map(Number)
-        .filter(n => Number.isFinite(n) && n > 0)
-        .map(n => Math.floor(n))
-    )].sort((a, b) => a - b);
-    if (cleaned.length > 0 && cleaned.length <= 12) allowed.quickAmounts = cleaned;
-  }
-  await commit({ ...state, config: { ...state.config, ...allowed } });
+  await commit({ ...state, config: { ...state.config, ...logic.sanitizeConfig(patch) } });
 }
 
 export async function payToBank(payload) {
   const { playerId, amount } = payload;
-  if (!Number.isFinite(amount) || amount <= 0) throw new Error('errors.invalidAmount');
+  logic.assertValidAmount(amount);
+  if (amount <= 0) throw new Error('errors.invalidAmount');
   await commit(logic.applyBankerAdjust(state, { playerId, amount: -amount }));
 }
 

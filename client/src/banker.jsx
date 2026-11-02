@@ -504,6 +504,7 @@ function BankerPlayerCard({ socket, player, state, onShowQr }) {
 
   return (
     <div
+      data-testid="player-card"
       className="card bg-base-200 shadow-md hover:shadow-xl transition-all overflow-hidden border-2"
       style={{ borderColor: player.color }}
     >
@@ -527,7 +528,7 @@ function BankerPlayerCard({ socket, player, state, onShowQr }) {
         </div>
       </div>
       <div className="card-body p-4 gap-5">
-        <div className="balance-display text-center text-3xl xl:text-4xl font-black">
+        <div data-testid="balance" className="balance-display text-center text-3xl xl:text-4xl font-black">
           {fmt(player.balance, cur)}
         </div>
         <div className="join w-full">

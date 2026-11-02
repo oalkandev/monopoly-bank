@@ -96,7 +96,7 @@ export function DiceNotification({ roll, players, onClose }) {
           <Dices size={20} />
           <span>{t('dice.rolledTitle')}</span>
         </div>
-        <div className="text-2xl font-black text-white mb-4 drop-shadow">
+        <div data-testid="dice-player" className="text-2xl font-black text-white mb-4 drop-shadow">
           {player?.name ?? '?'}
         </div>
         <div className="flex items-center justify-center gap-4 my-4">
@@ -106,7 +106,7 @@ export function DiceNotification({ roll, players, onClose }) {
         </div>
         <div className="mt-4 text-white">
           <div className="text-xs uppercase tracking-wider opacity-75 font-bold">{t('dice.total')}</div>
-          <div className="balance-display text-6xl font-black drop-shadow leading-none mt-1">
+          <div data-testid="dice-total" className="balance-display text-6xl font-black drop-shadow leading-none mt-1">
             {settled ? total : '?'}
           </div>
           {isDouble && (
