@@ -90,6 +90,3 @@ test('events sent without a payload answer with a translatable error key', async
     await app.stop();
   }
 });
-
-test.todo('a client cannot become banker by claiming role=banker');
-test.todo('the state broadcast does not expose other players’ tokens');

@@ -1,8 +1,22 @@
 # Changelog
 
-Notable user-facing changes to Monopoly Bank. There are no version tags yet, so sections are dated, newest first.
+Notable user-facing changes to Monopoly Bank, newest first.
 
-## 2026-11-02
+## Unreleased
+
+### Changed
+
+- Undoing a payment is refused when the player has already spent that money. The banker can correct the balance by hand.
+- Amounts must be whole numbers.
+
+### Fixed
+
+- A failed save no longer stops later saves, and the game carries on.
+- A damaged save file is kept aside and the app starts with an empty game.
+- A player stays online while another of their connections is open.
+- Invalid starting settings are ignored.
+
+## 1.0.0-beta (2026-11-02)
 
 ### Added
 

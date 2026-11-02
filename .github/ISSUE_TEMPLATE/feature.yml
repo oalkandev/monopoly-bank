@@ -1,0 +1,17 @@
+name: Feature request
+description: Suggest a new behaviour or a change to an existing one.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What do you try to do, and what gets in the way?
+    validations:
+      required: true
+  - type: textarea
+    id: behaviour
+    attributes:
+      label: Proposed behaviour
+    validations:
+      required: true
