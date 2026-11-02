@@ -2,7 +2,7 @@
 
 Notable user-facing changes to Monopoly Bank, newest first.
 
-## Unreleased
+## 1.0.0-beta.2 (2026-11-02)
 
 ### Changed
 
