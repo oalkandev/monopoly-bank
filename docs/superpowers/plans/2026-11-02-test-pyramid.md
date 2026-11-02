@@ -15,7 +15,7 @@
 | Layer | Tool | Tests | Budget | Runs | Answers |
 |---|---|---|---|---|---|
 | Manual | checklist | 8 items | 20 min | before a release | Does it work on real phones and a real projector? |
-| Desktop smoke | Playwright `_electron` | 6 | 2 min | release, manual trigger | Does the app open, keep its port, survive a busy port? |
+| Desktop smoke | Playwright `_electron` | 4 | 2 min | release, manual trigger | Does the app open, keep its port, survive a busy port? |
 | E2E | Playwright | 12 | 3 min | every PR | Do the banker and phones agree through a whole game? |
 | Client behaviour | Vitest | ~20 | 10 s | every PR | Are the timers and notification rules right? |
 | Server integration | `node:test`, real server, real sockets | ~55, 22 of them one permissions table | 15 s | every PR | Are identity, permissions, broadcast and saving right? |
@@ -24,7 +24,7 @@
 
 Mutation testing runs across the server code weekly and on demand.
 
-**Why the integration layer is thick.** The usual pyramid would put most tests in unit tests. Here `game-logic.js` is small and already the best-tested file, while 9 of the 15 defects below sit where modules meet: sockets, persistence and startup. Test counts are ceilings, not goals. Stop when the rules are covered.
+**Why the integration layer is thick.** The usual pyramid would put most tests in unit tests. Here `game-logic.js` is small and already the best-tested file, while 9 of the 13 defects below sit where modules meet: sockets, persistence and startup. Test counts are ceilings, not goals. Stop when the rules are covered.
 
 **Rough order of size (unmeasured estimate):** Tasks 1, 2, 5, 6 and 9 about half a day each; Tasks 3, 4, 7 and 8 about a day each.
 
@@ -47,11 +47,9 @@ Measured on 2026-11-02 against commit `ebdf283` with a throwaway script, except 
 | D11 | `add-player` with no color is accepted | Falls back to `#475569`, the color the UI already uses for an unknown player | 2 |
 | D12 | `App` in `player.jsx` calls hooks after an early return (code reading) | Split the component so hook order cannot change | 1 |
 | D13 | Socket.IO accepts WebSocket connections from any website's origin, and the desktop port is now predictable (security review, not run) | Refuse when the `Origin` host differs from the `Host` header; allow no `Origin` for non-browser clients | 3 |
-| D14 | The desktop window loads `http://localhost:<port>` while the server binds IPv4 only, so a local process on `::1` could serve the window (security review, not run) | Load `http://127.0.0.1:<port>`. This resets theme and language once | 9 |
-| D15 | `setWindowOpenHandler` passes any URL scheme to `shell.openExternal` (security review) | Only `http:` and `https:` reach it | 9 |
 
 **Out of scope, on purpose:**
-- The banker role is self-declared, and every client receives every player's token (4 bytes) in the `state` broadcast. Closing this is a design change: a server-issued banker secret, redacted broadcasts, and identifying the player by id. It needs its own plan. Task 3 records it as two `test.todo` entries so it stays visible in every test run.
+- Security hardening such as a login, a banker secret or redacted broadcasts. The maintainer's decision: this is a home app on a local network and security is not a requirement.
 - "Send to Everyone" is a client-side loop of transfers, so a failure midway leaves it partly applied (code reading). The fix is an atomic server event. Do not write a test that pins today's behaviour.
 
 ## Global Constraints
@@ -526,7 +524,7 @@ git commit -m "test: add multi-device journeys"
 
 **Files:**
 - Create: `tests/electron/playwright.config.js`, `tests/electron/smoke.spec.js`, `.github/workflows/desktop.yml`, `docs/testing.md`
-- Modify: `electron/main.cjs:60-65`, `README.md`
+- Modify: `README.md`, and `electron/main.cjs` only if Step 1 requires it
 
 **Interfaces:**
 - Consumes: the `test:desktop` script from Task 1.
@@ -541,14 +539,12 @@ Launch with `_electron.launch({ args: ['.', `--user-data-dir=${tmp}`] })` and as
 test('the app opens the banker screen')
 test('the address, theme and language are the same after a relaunch') // skip when 3737 is taken on this machine
 test('the app still opens on another port when 3737 is taken')
-test('the window loads from 127.0.0.1')
-test('only http and https links are passed to the operating system') // D15, through the window-open handler
 ```
 
-- [ ] **Step 3: Run to verify D14 and D15 fail, then fix them**
+- [ ] **Step 3: Run them and prove red**
 
 Run: `npm run test:desktop`
-Expected: FAIL on the last two. In `electron/main.cjs`, load `http://127.0.0.1:${port}/banker` and check the URL's protocol before `shell.openExternal`.
+Expected: PASS. Prove each can fail by breaking one line in `electron/main.cjs`, then restore it.
 
 - [ ] **Step 4: Write `docs/testing.md`**
 
@@ -568,8 +564,8 @@ git commit -m "test: add desktop smoke tests and a release checklist"
 ### Task 10: Contributor guide
 
 **Files:**
-- Create: `CONTRIBUTING.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`, `.github/PULL_REQUEST_TEMPLATE.md`, `.github/ISSUE_TEMPLATE/bug.yml`, `.github/ISSUE_TEMPLATE/feature.yml`
-- Modify: `README.md`
+- Create: `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `.github/PULL_REQUEST_TEMPLATE.md`, `.github/ISSUE_TEMPLATE/bug.yml`, `.github/ISSUE_TEMPLATE/feature.yml`
+- Modify: `README.md`, `CHANGELOG.md`, `tests/integration/authorization.test.js`
 
 **Interfaces:**
 - Consumes: the npm scripts from Task 1 and `docs/testing.md` from Task 9.
@@ -577,11 +573,12 @@ git commit -m "test: add desktop smoke tests and a release checklist"
 - [ ] **Step 1: Write the documents, in plain English**
 
 - `CONTRIBUTING.md`: Node 22 or newer for the test tools, `npm install`, `npm run build`, how to run each test layer, a link to the quality rules in `docs/testing.md`, English conventional commits, one change per PR, new error keys go in all 7 locales.
-- `SECURITY.md`: the app is for trusted home networks and has no login; state the known limits (self-declared banker role, player tokens visible to every client); report other problems through GitHub's "Report a vulnerability" on the Security tab, or by email to `oalkandev@gmail.com` if that option is not available.
 - `CODE_OF_CONDUCT.md`: adopt the Contributor Covenant 2.1 by linking to it rather than copying its text, in a few sentences; conduct reports go to `oalkandev@gmail.com`.
 - `.github/PULL_REQUEST_TEMPLATE.md`: what changed and why, how it was tested, a checkbox that new tests were seen failing first.
 - `bug.yml`: steps to reproduce, expected, actual, device and browser, app version or commit. `feature.yml`: the problem, the proposed behaviour.
-- `README.md`: add a short Contributing section linking to `CONTRIBUTING.md` and `SECURITY.md`.
+- `README.md`: add a short Contributing section linking to `CONTRIBUTING.md`.
+- `CHANGELOG.md`: rename the `## 2026-11-02` heading to `## 1.0.0-beta (2026-11-02)`, and update the intro line, which says there are no version tags.
+- `tests/integration/authorization.test.js`: remove the two security `test.todo` entries. Security hardening is out of scope.
 
 - [ ] **Step 2: Verify**
 
@@ -591,7 +588,7 @@ Expected: no errors, no broken links. Every command in `CONTRIBUTING.md` exists 
 - [ ] **Step 3: Commit**
 
 ```bash
-git add CONTRIBUTING.md SECURITY.md CODE_OF_CONDUCT.md .github README.md
+git add CONTRIBUTING.md CODE_OF_CONDUCT.md .github README.md CHANGELOG.md tests/integration/authorization.test.js
 git commit -m "docs: add contributor guide, security policy and templates"
 ```
 
@@ -599,11 +596,10 @@ git commit -m "docs: add contributor guide, security policy and templates"
 
 ## Done means
 
-- All 15 defects are fixed and each has a test that was seen failing.
+- All 13 defects are fixed and each has a test that was seen failing.
 - `npm run lint && npm test && npm run test:client && npm run test:e2e` passes from a clean clone in under 5 minutes.
 - Mutation score on `game-logic.js` and `persistence.js` is at least 80%, every remaining survivor has a stated reason, and the weekly full run reports `state.js` and `socket-handlers.js`.
 - A branch rule on `master` requires the `checks` and `e2e` jobs before merging.
-- The two `test.todo` entries remain visible until the banker-secret design is done.
 
 ## What we will not test
 
