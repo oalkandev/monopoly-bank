@@ -1,5 +1,13 @@
 import { test, expect } from './helpers/app.js';
 
+const recordDiceTotals = (page) => page.evaluate(() => {
+  window.__diceTotals = [];
+  new MutationObserver(() => {
+    const text = document.querySelector('[data-testid="dice-total"]')?.textContent;
+    if (text != null && text !== window.__diceTotals.at(-1)) window.__diceTotals.push(text);
+  }).observe(document.body, { subtree: true, childList: true, characterData: true });
+});
+
 test('the dice result is hidden, then every screen shows the same total, then it closes by itself', async ({ app, banker, phone }) => {
   await app.setup(['Ann', 'Bob']);
   const ann = await phone('Ann');
@@ -7,13 +15,15 @@ test('the dice result is hidden, then every screen shows the same total, then it
   const screens = [banker, ann, bob];
   await expect(bob.getByTestId('balance')).toBeVisible();
 
+  for (const s of screens) await recordDiceTotals(s);
+
   await ann.getByRole('button', { name: 'Roll Dice' }).click();
 
-  for (const s of screens) await expect(s.getByTestId('dice-total')).toHaveText('?');
   await expect(banker.getByTestId('dice-total')).toHaveText(/^\d+$/);
   const total = await banker.getByTestId('dice-total').textContent();
   expect(Number(total)).toBeGreaterThanOrEqual(2);
-  for (const s of screens) await expect(s.getByTestId('dice-total')).toHaveText(total);
+  // Each page records what it shows itself, so a slow runner cannot miss the 2-second '?'.
+  for (const s of screens) await expect.poll(() => s.evaluate(() => window.__diceTotals)).toEqual(['?', total]);
   for (const s of screens) await expect(s.getByTestId('dice-total')).toBeHidden({ timeout: 10_000 });
 });
 
