@@ -11,6 +11,7 @@ Notable user-facing changes to Monopoly Bank, newest first.
 
 ### Fixed
 
+- A phone or browser set to a regional language such as tr-TR, de-DE or fr-FR opened in English.
 - A failed save no longer stops later saves, and the game carries on.
 - A damaged save file is kept aside and the app starts with an empty game.
 - A player stays online while another of their connections is open.

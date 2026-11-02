@@ -9,17 +9,21 @@ async function languageFor(lang) {
   return i18n.resolvedLanguage;
 }
 
-test('pt-PT resolves to Brazilian Portuguese and an unknown language to English', async () => {
-  expect(await languageFor('pt-PT')).toBe('pt-BR');
-  expect(await languageFor('xx')).toBe('en');
-});
-
-test('a plain tr code resolves to Turkish', async () => {
-  expect(await languageFor('tr')).toBe('tr');
-});
-
-// Known defect: `load: 'currentOnly'` stops tr-TR and de-DE from reaching tr and de, so they show English.
-// test.fails turns red when the app is fixed; then change it to a plain test.
-test.fails('tr-TR resolves to Turkish', async () => {
+test('regional codes tr-TR, de-DE and fr-FR resolve to their language', async () => {
   expect(await languageFor('tr-TR')).toBe('tr');
+  expect(await languageFor('de-DE')).toBe('de');
+  expect(await languageFor('fr-FR')).toBe('fr');
+});
+
+test('pt-BR and pt-PT resolve to Brazilian Portuguese', async () => {
+  const brazilian = i18n.t('common.bank', { lng: 'pt-BR' });
+  expect(brazilian).not.toBe(i18n.t('common.bank', { lng: 'en' }));
+  for (const lang of ['pt-BR', 'pt-PT']) {
+    await languageFor(lang);
+    expect(i18n.t('common.bank')).toBe(brazilian);
+  }
+});
+
+test('an unsupported language resolves to English', async () => {
+  expect(await languageFor('xx')).toBe('en');
 });
