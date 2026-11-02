@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import toast, { Toaster } from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import './i18n.js';
+import { matchFilter } from './history.js';
 import { useSocket } from './useSocket.js';
 import { emit, formatRelative, getQuickAmounts, DEFAULT_QUICK_AMOUNTS, MAX_NAME_LENGTH } from './socket.js';
 import { QrCode } from './QrCode.jsx';
@@ -665,16 +666,6 @@ function HistoryCard({ socket, state }) {
       </div>
     </div>
   );
-}
-
-function matchFilter(tx, filter) {
-  if (filter === 'all') return true;
-  if (filter === 'bank') return !tx.from || !tx.to;
-  if (filter.startsWith('player:')) {
-    const id = filter.slice(7);
-    return tx.from === id || tx.to === id;
-  }
-  return true;
 }
 
 function FilterBar({ state, filter, setFilter }) {

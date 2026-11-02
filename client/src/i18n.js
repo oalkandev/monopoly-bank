@@ -42,7 +42,7 @@ i18n
     },
     supportedLngs: ['tr', 'en', 'es', 'de', 'fr', 'it', 'pt-BR', 'pt'],
     nonExplicitSupportedLngs: true,
-    load: 'currentOnly',
+    load: 'all',
     detection: {
       order: ['localStorage', 'navigator'],
       caches: ['localStorage'],

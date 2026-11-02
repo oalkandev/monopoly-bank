@@ -10,7 +10,7 @@
 
 **Spec:** No separate spec. The requirement is the maintainer's request for a realistic pyramid with real quality tests, and the [measured defects](#measured-defects) below are the evidence.
 
-**Status (2026-11-02):** Tasks 1 to 6, 8 and 10 are done. Tasks 7 and 9 are deferred. In Task 6, nine surviving mutants have not been examined and the full mutation run has not finished yet. The `test:client` and `test:desktop` scripts were removed until Tasks 7 and 9 run, and the test rules live in `CONTRIBUTING.md` until `docs/testing.md` exists.
+**Status (2026-11-02):** All tasks are done. The nine surviving mutants are explained in the commit `test: resolve surviving mutants`. The test rules live in `CONTRIBUTING.md`, and `docs/testing.md` holds the commands and the manual checklist.
 
 ## The pyramid
 
